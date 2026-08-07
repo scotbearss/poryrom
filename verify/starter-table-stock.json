@@ -1,0 +1,191 @@
+{
+ "name": "starter-table-stock",
+ "symbols_from": "engine",
+ "symbols_from_why": "Runs against the PINNED BASE ROM: every symbol it reads is vanilla.",
+ "description": "The MIRROR IMAGE of starter-table-proofhack.json: the same probes, the same controls, the same liveness assertions -- only the two discriminating expected values differ. It asserts the STOCK sStarterMon values (TORCHIC in the middle), so it PASSes on pokemon/engine/pokeemerald.gba and MUST FAIL on pokemon/hacks/proofhack/pokeemerald.gba. Running both specs against both ROMs gives a 2x2 matrix whose diagonal is PASS and whose off-diagonal is FAIL. One direction alone would be a weaker claim: a spec that fails on the stock ROM might merely be a spec that fails. Failing in the OTHER direction too, on the same probes, is what rules that out.",
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 600,
+   "keys": []
+  },
+  {
+   "name": "settle",
+   "frames": {
+    "random_range": [
+     30,
+     90
+    ]
+   },
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "starter_row",
+   "why": "THE WHOLE TABLE, as raw bytes. static const u16 sStarterMon[3] at src/starter_choose.c:113, little-endian: fc00 ff00 0201 = TREECKO(252) TORCHIC(255) MUDKIP(258). Exact byte-string compare -- the check class doc 55 \u00a79.4 found actually discriminates, as against thresholds and constant checks which do not.",
+   "symbol": "sStarterMon",
+   "offset": 0,
+   "type": "bytes",
+   "length": 6,
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 120,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "starter_mid",
+   "why": "THE ONE CHANGED VALUE, from the other side. sStarterMon[1]: SPECIES_TORCHIC = 255 here. proofhack rebuilt it as SPECIES_CHARMANDER = 4, so this assertion is the one that flips.",
+   "symbol": "sStarterMon",
+   "offset": 2,
+   "type": "u16",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "starter_first",
+   "why": "CONTROL. sStarterMon[0] = SPECIES_TREECKO = 252 in BOTH builds. Its PASSing on the hack is what shows the FAIL is aimed at the edited element rather than at 'this is a different binary'.",
+   "symbol": "sStarterMon",
+   "offset": 0,
+   "type": "u16",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "starter_last",
+   "why": "CONTROL, other side. sStarterMon[2] = SPECIES_MUDKIP = 258 in both builds. 258 = 0x0102 is the one value here whose two bytes differ, so a mis-sized or mis-offset read is visible rather than silently agreeing.",
+   "symbol": "sStarterMon",
+   "offset": 4,
+   "type": "u16",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "vblank",
+   "why": "gMain.vblankCounter1 (include/main.h offset 0x20). The table reads come from a machine that was executing, not from a file on disk.",
+   "symbol": "gMain",
+   "offset": 32,
+   "type": "u32",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60
+   }
+  },
+  {
+   "id": "callback2",
+   "why": "gMain.callback2 (offset 0x04), resolved against the .sym of the ROM actually under test.",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "starter_row",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": "fc00ff000201",
+   "why": "DISCRIMINATOR 1. The stock starter table, exact bytes. On the proofhack ROM this reads fc0004000201 and FAILS."
+  },
+  {
+   "probe": "starter_mid",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 255,
+   "why": "DISCRIMINATOR 2, isolated to the one element so the failure names the slot. SPECIES_TORCHIC = 255 (include/constants/species.h:259). On proofhack this reads 4 and FAILS."
+  },
+  {
+   "probe": "starter_mid",
+   "check": "constant",
+   "why": "SUPPORTING ONLY -- never load-bearing. Doc 55 \u00a79.4: constant survives an address shift because garbage is unchanging too."
+  },
+  {
+   "probe": "starter_first",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 252,
+   "why": "CONTROL. Must PASS on BOTH builds."
+  },
+  {
+   "probe": "starter_last",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 258,
+   "why": "CONTROL, other side. Must PASS on BOTH builds."
+  },
+  {
+   "probe": "starter_row",
+   "check": "always_valid",
+   "why": "Every sample of the table was readable."
+  },
+  {
+   "probe": "starter_mid",
+   "check": "sample_count",
+   "op": ">=",
+   "value": 4,
+   "why": "The table was re-read many times across the run, not once at a lucky moment."
+  },
+  {
+   "probe": "vblank",
+   "check": "strictly_increases",
+   "why": "The engine was alive and advancing for the whole run."
+  },
+  {
+   "probe": "callback2",
+   "check": "resolves",
+   "at": "all",
+   "allow_zero": true,
+   "why": "Every non-null callback resolves in this build's own .sym; zero at frame 1 is legitimate."
+  },
+  {
+   "probe": "callback2",
+   "check": "symbol_sequence",
+   "op": "contains_in_order",
+   "value": [
+    "CB2_InitCopyrightScreenAfterBootup",
+    "CB2_ExpansionIntro",
+    "MainCB2_Intro"
+   ],
+   "why": "Doc 54 \u00a73's boot progression, asserted by name. Because this holds on BOTH builds, a FAIL of this spec on the hack cannot be explained away as 'the hack does not boot'."
+  }
+ ]
+}

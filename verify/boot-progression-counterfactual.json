@@ -1,0 +1,121 @@
+{
+ "name": "boot-progression-counterfactual",
+ "symbols_from": "engine",
+ "symbols_from_why": "Runs against the PINNED BASE ROM: every symbol it reads is vanilla.",
+ "description": "THIS SPEC MUST FAIL. It is boot-progression.json with deliberately WRONG expected values -- same probes, same timeline, same harness. If it ever PASSes, the harness has stopped depending on what the ROM actually did, and every PASS it has ever reported is worthless. Run it with --expect-fail (exit 0 only on FAIL). Every proof needs a counterfactual; a proof that cannot fail is not a proof (docs/research/06-ai-harness-lessons.md).",
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 600,
+   "keys": []
+  },
+  {
+   "name": "settle",
+   "frames": {
+    "random_range": [
+     30,
+     90
+    ]
+   },
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "vblank",
+   "symbol": "gMain",
+   "offset": 32,
+   "type": "u32",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60
+   }
+  },
+  {
+   "id": "callback2",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60
+   }
+  },
+  {
+   "id": "cb2_code",
+   "symbol": "gMain",
+   "base_offset": 4,
+   "deref": true,
+   "offset": 0,
+   "type": "u16",
+   "sample": {
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "sb2_ptr",
+   "symbol": "gSaveBlock2Ptr",
+   "type": "ptr",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 120,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "vblank",
+   "check": "constant",
+   "why": "WRONG ON PURPOSE. The VBlank counter demonstrably rises. If this passes, the probe is not reading gMain.vblankCounter1 at all -- it is reading something dead."
+  },
+  {
+   "probe": "callback2",
+   "check": "symbol_at",
+   "at": "last",
+   "op": "==",
+   "value": "CB2_InitCopyrightScreenAfterBootup",
+   "why": "WRONG ON PURPOSE. The engine has left the copyright screen long before frame 600. This is the flipped form of the real assertion that the boot state machine ADVANCED; a harness that cannot tell these two apart proves nothing about progression."
+  },
+  {
+   "probe": "callback2",
+   "check": "symbol_sequence",
+   "op": "contains_in_order",
+   "value": [
+    "MainCB2_Intro",
+    "CB2_ExpansionIntro",
+    "CB2_InitCopyrightScreenAfterBootup"
+   ],
+   "why": "WRONG ON PURPOSE: the real progression, reversed. Order-blindness is the specific way a sequence check silently degrades into a set check, so it gets its own counterfactual."
+  },
+  {
+   "probe": "cb2_code",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 0,
+   "why": "WRONG ON PURPOSE. The pointer chase lands on real THUMB code (0x00b5 = push {lr}), never on zeros. This is the assertion that would still pass if the deref silently read an unmapped hole -- so its counterfactual is the one that proves the chase reaches memory that actually contains something."
+  },
+  {
+   "probe": "sb2_ptr",
+   "check": "symbol_at",
+   "of": "value",
+   "at": "last",
+   "op": "==",
+   "value": "gPlayerParty",
+   "why": "WRONG ON PURPOSE. gSaveBlock2Ptr points into gSaveblock2, not gPlayerParty. Both are real EWRAM symbols, so this counterfactual specifically tests that pointer-to-name resolution discriminates between neighbouring globals rather than just returning something plausible."
+  }
+ ]
+}

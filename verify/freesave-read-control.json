@@ -1,0 +1,186 @@
+{
+  "name": "freesave-read-control",
+  "description": "FREESAVE, THE CONTROL \u2014 doc 67 slate item G. Cold boot the SAME build that wrote the .sav, CONTINUE, and read all six seeded values back. This is the arm that makes the flipped arm mean anything: without it, 'the switches-ON build reports a corrupt save' is equally consistent with 'the .sav this fixture wrote was never any good', and both stories predict the identical output. Doc 61 \u00a74's pair rule \u2014 when a positive result and its likeliest failure mode predict the same observation, the proof is the PAIR of runs. Offsets here are the switches-OFF build's own, published by its compiler in gFreeSaveOffsets.\n\nTIMELINE NOTE, PAID FOR: the first version of this pair mashed A to reach CONTINUE. On the flipped build that mash walked PAST the corrupt-save message and committed to NEW GAME, whose NewGameInitData() zeroes every block -- so all ten probes read 0 and it looked exactly like 'the load discarded everything'. The screenshot showed Birch mid-speech and settled it in one look. Doc 69's rule, ignored by the person who wrote it down: when a mash must cross a screen that becomes interactive, use a button that cannot commit -- or, as here, press nothing. The save is loaded by Save_LoadGameData during the COPYRIGHT SCREEN (doc 61 \u00a73), long before the menu exists, so no input is needed to observe it and any input is a risk. Both arms now run the identical no-input timeline.",
+  "persist_dir": "freesave",
+  "symbols_from": "freesave",
+  "symbols_from_why": "gFreeSaveHookLatch and gFreeSaveOffsets are fork-only symbols.",
+  "screenshot": true,
+  "timeline": [
+    {
+      "name": "cold_boot",
+      "frames": 600,
+      "keys": []
+    },
+    {
+      "name": "let_the_intro_play_out",
+      "frames": 3600,
+      "keys": []
+    }
+  ],
+  "probes": [
+    {
+      "id": "status",
+      "why": "THE CLAIM of this arm. gSaveFileStatus as GetSaveValidStatus left it. SAVE_STATUS_OK == 1.",
+      "symbol": "gSaveFileStatus",
+      "type": "u16",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "party_count",
+      "why": "BELOW THE CUT (0x234). Survives here by definition; it is the flipped arm's comparison.",
+      "symbol": "gSaveBlock1Ptr",
+      "deref": true,
+      "offset": 564,
+      "type": "u8",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "mon_level",
+      "why": "BELOW THE CUT. The seeded Zigzagoon at party+0x54.",
+      "symbol": "gSaveBlock1Ptr",
+      "deref": true,
+      "offset": 652,
+      "type": "u8",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "money_raw",
+      "why": "OBSERVATION ONLY, AND THE REASON IS THE FINDING. money is XORed with SaveBlock2's encryptionKey, and src/load_save.c:138 generates a NEW key with Random32() and re-encrypts everything on EVERY load. So the raw bytes differ on every run by design \u2014 measured 0x9bb48c81 on the write run and 0x5ec66288 on the first control read of the very same .sav. An encrypted save field cannot be asserted by its stored bytes across processes; assert the plaintext or do not assert it. party_count and mon_level carry the below-the-cut claim instead, and both are plaintext.",
+      "symbol": "gSaveBlock1Ptr",
+      "deref": true,
+      "offset": 1168,
+      "type": "u32",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "flag_byte",
+      "why": "ABOVE THE CUT. flags[] byte holding FLAG_SYS_POKEDEX_GET, at this build's flags offset 4720 + 268.",
+      "symbol": "gSaveBlock1Ptr",
+      "deref": true,
+      "offset": 4988,
+      "type": "u8",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "var_recycle",
+      "why": "ABOVE THE CUT. vars[] entry for VAR_RECYCLE_GOODS, at this build's vars offset 5020 + 64.",
+      "symbol": "gSaveBlock1Ptr",
+      "deref": true,
+      "offset": 5084,
+      "type": "u16",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "dex_caught0",
+      "why": "THE TAIL, sector 4. This build's dexCaught offset 13849.",
+      "symbol": "gSaveBlock1Ptr",
+      "deref": true,
+      "offset": 13849,
+      "type": "u8",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "playtime_hrs",
+      "why": "SECTOR 0. SaveBlock2+0x0E.",
+      "symbol": "gSaveBlock2Ptr",
+      "deref": true,
+      "offset": 14,
+      "type": "u16",
+      "sample": {
+        "every": 200
+      }
+    },
+    {
+      "id": "cb2",
+      "why": "CONTROL. The copyright screen names a COLD CPU start by symbol, and reaching the overworld means CONTINUE was taken.",
+      "symbol": "gMain",
+      "offset": 4,
+      "type": "ptr",
+      "sample": {
+        "every": 100
+      }
+    }
+  ],
+  "assert": [
+    {
+      "probe": "status",
+      "check": "compare",
+      "at": "last",
+      "op": "==",
+      "value": 1,
+      "why": "SAVE_STATUS_OK. The .sav this fixture wrote is a GOOD save when read by the build that wrote it."
+    },
+    {
+      "probe": "party_count",
+      "check": "compare",
+      "at": "last",
+      "op": "==",
+      "value": 1,
+      "why": "Seeded party survived the process boundary."
+    },
+    {
+      "probe": "mon_level",
+      "check": "compare",
+      "at": "last",
+      "op": "==",
+      "value": 17,
+      "why": "Exact and non-zero \u2014 a discriminating class under an address shift."
+    },
+    {
+      "probe": "flag_byte",
+      "check": "compare",
+      "at": "last",
+      "op": "==",
+      "value": 2,
+      "why": "FLAG_SYS_POKEDEX_GET is bit 1 of this byte."
+    },
+    {
+      "probe": "var_recycle",
+      "check": "compare",
+      "at": "last",
+      "op": "==",
+      "value": 23205,
+      "why": "0x5AA5. Exact, non-zero, and chosen to be a value nothing else in the engine writes."
+    },
+    {
+      "probe": "dex_caught0",
+      "check": "compare",
+      "at": "last",
+      "op": "==",
+      "value": 255,
+      "why": "Species 1-8 caught. This is the byte the flipped arm is predicted to lose entirely."
+    },
+    {
+      "probe": "playtime_hrs",
+      "check": "compare",
+      "at": "last",
+      "op": "==",
+      "value": 7,
+      "why": "SaveBlock2 survived, which the flipped arm is predicted to lose."
+    },
+    {
+      "probe": "cb2",
+      "check": "symbol_sequence",
+      "op": "contains_in_order",
+      "value": [
+        "CB2_InitCopyrightScreenAfterBootup",
+        "MainCB2_Intro"
+      ],
+      "why": "CONTROL. A cold CPU start named by symbol (doc 61 \u00a73: that screen is reachable only from a cold start, and it is where Save_LoadGameData runs), followed by the intro. Deliberately NOT the main menu: with no input the game stops at the title screen, and both arms must assert the same sequence."
+    }
+  ]
+}

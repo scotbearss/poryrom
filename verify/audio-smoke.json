@@ -1,0 +1,285 @@
+{
+ "name": "audio-smoke",
+ "symbols_from": "engine",
+ "symbols_from_why": "Runs against the PINNED BASE ROM: every symbol it reads is vanilla.",
+ "description": "SMOKE TEST for the mAVStream audio tap added to mgba-headless 2026-08-05 (doc 67 slate item J). Same overworld state and the same assertions as palette-baseline; the only difference is \"audio\": true. Its job is to prove the harness can HEAR, which no run in this project has ever been able to do.",
+ "savestate": "emerald_overworld.ss1",
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "settle",
+   "frames": 300,
+   "keys": []
+  },
+  {
+   "name": "walk",
+   "frames": 240,
+   "keys": [
+    "Down"
+   ]
+  }
+ ],
+ "probes": [
+  {
+   "id": "reserved",
+   "why": "gReservedSpritePaletteCount. IndexOfSpritePaletteTag scans from THIS index to 15, so it is the floor of the dynamic allocator. FreeAndReserveObjectSpritePalettes would set it to OBJ_PALSLOT_COUNT (12), but its only live caller is player_pc.c -- so the overworld's value is the question, not a known.",
+   "symbol": "gReservedSpritePaletteCount",
+   "type": "u8",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ],
+    "every": 120
+   }
+  },
+  {
+   "id": "tag00",
+   "why": "sSpritePaletteTags[0]. TAG_NONE (0x11FF at this pin's OBJ_EVENT_PAL_TAG_NONE, or 0xFFFF for the sprite-system TAG_NONE) means the slot is free.",
+   "symbol": "sSpritePaletteTags",
+   "offset": 0,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag01",
+   "why": "sSpritePaletteTags[1].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 2,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag02",
+   "why": "sSpritePaletteTags[2].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 4,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag03",
+   "why": "sSpritePaletteTags[3].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 6,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag04",
+   "why": "sSpritePaletteTags[4].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 8,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag05",
+   "why": "sSpritePaletteTags[5].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 10,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag06",
+   "why": "sSpritePaletteTags[6].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 12,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag07",
+   "why": "sSpritePaletteTags[7].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 14,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag08",
+   "why": "sSpritePaletteTags[8].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 16,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag09",
+   "why": "sSpritePaletteTags[9].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 18,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag10",
+   "why": "sSpritePaletteTags[10].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 20,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag11",
+   "why": "sSpritePaletteTags[11].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 22,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag12",
+   "why": "sSpritePaletteTags[12]. The vanilla comment says slots 12-15 belong to field effects and the interface. If the allocator is genuinely first-fit from 0, that claim is also stale.",
+   "symbol": "sSpritePaletteTags",
+   "offset": 24,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag13",
+   "why": "sSpritePaletteTags[13].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 26,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag14",
+   "why": "sSpritePaletteTags[14].",
+   "symbol": "sSpritePaletteTags",
+   "offset": 28,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "tag15",
+   "why": "sSpritePaletteTags[15]. THE ONE THAT MATTERS. LoadSpritePalette returns 0xFF when every slot is taken, CreateSprite assigns that into oam.paletteNum, and oam.paletteNum is a 4-BIT field -- so 0xFF truncates to 15. An NPC past the budget does not vanish; it renders in whatever this slot holds.",
+   "symbol": "sSpritePaletteTags",
+   "offset": 30,
+   "type": "u16",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  },
+  {
+   "id": "cb2",
+   "why": "Doc 66's rule -- assert that the thing under test actually happened. A palette table read outside the overworld is a measurement of a different screen.",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "at_step_end": [
+     "settle",
+     "walk"
+    ]
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "cb2",
+   "check": "symbol_at",
+   "at": "all",
+   "of": "value",
+   "op": "==",
+   "value": "CB2_Overworld",
+   "why": "The only load-bearing assertion here. Everything else is an observation."
+  },
+  {
+   "probe": "reserved",
+   "check": "always_valid",
+   "why": "SUPPORTING. Observation spec."
+  },
+  {
+   "probe": "tag00",
+   "check": "always_valid",
+   "why": "SUPPORTING."
+  },
+  {
+   "probe": "tag15",
+   "check": "always_valid",
+   "why": "SUPPORTING."
+  }
+ ],
+ "audio": true
+}

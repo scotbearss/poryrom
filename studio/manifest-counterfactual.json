@@ -1,0 +1,17 @@
+{
+  "_comment": [
+    "COUNTERFACTUAL. Deliberately different from manifest.json in all four",
+    "dimensions: a different caught set, no design-stage species at all,",
+    "different items, and a different badge count. Building the studio ROM from",
+    "THIS file and running the unmodified studio-state spec against it must FAIL.",
+    "That is what proves the spec is reading the manifest's effect on real game",
+    "state rather than just observing that a Pokemon game booted."
+  ],
+  "species": [
+    { "id": "SPECIES_ZIGZAGOON", "state": "caught" }
+  ],
+  "items": [
+    { "id": "ITEM_REPEL", "qty": 1 }
+  ],
+  "badges": 6
+}

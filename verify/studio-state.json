@@ -1,0 +1,203 @@
+{
+ "name": "studio-state",
+ "symbols_from": "studio",
+ "symbols_from_why": "Reads state the studio fork's generated manifest wrote.",
+ "description": "SLICE 0 of the Studio ROM. Proves that data written in pokemon/studio/manifest.json reaches real, live game state -- that a generated manifest can drive the engine's own Pokedex, bag and badge case. Cold boot, no savestate: the studio build skips the intro and title screen entirely and starts a new game outdoors in Littleroot Town, so the overworld is reachable in a few hundred frames rather than the ~31000 a stock boot needs. Every probe reads gSaveBlock1Ptr by deref (doc 44 ASLR: the pointer is re-rolled on every map load, so it is re-read on every sample and never cached). Struct offsets are NOT hand-computed -- src/studio_state.c publishes them via __builtin_offsetof in gStudioSaveOffsets, and the two that include/global.h annotates (flags 0x1270, bagPocket_Items 0x560) came back matching, which is what makes the two unannotated dex offsets trustworthy. Its counterfactual is studio-state-counterfactual.json, built from a DIFFERENT manifest: same probes, same harness, and the assertions must come out opposite.",
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 600,
+   "keys": []
+  },
+  {
+   "name": "settle",
+   "frames": {
+    "random_range": [
+     30,
+     120
+    ]
+   },
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "callback2",
+   "why": "Liveness. Proves the values below were read out of a machine that was actually executing, not a frozen or crashed one. Nothing about the studio state depends on this; it is the control that makes the rest mean anything.",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "every": 60
+   }
+  },
+  {
+   "id": "map_group",
+   "why": "PROOF OF THE INTRO SKIP. SaveBlock1.location.mapGroup (struct WarpData at 0x04). Stock Emerald starts a new game INSIDE_OF_TRUCK; the studio build warps to LITTLEROOT_TOWN = (9 | (0 << 8)), so group must be 0. Together with map_num this proves the boot went somewhere it structurally could not have gone without the studio patch.",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 4,
+   "type": "u8",
+   "sample": {
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "map_num",
+   "why": "Second half of the same fact. MAP_LITTLEROOT_TOWN's map number is 9 (include/constants/map_groups.h:18).",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 5,
+   "type": "u8",
+   "sample": {
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "bag_item0",
+   "why": "THE BAG, slot 0 item id. bagPocket_Items at 0x560, struct ItemSlot is {u16 itemId; u16 quantity}. A stock new game runs ClearBag() and adds nothing to this pocket, so a nonzero id here can only have come from the manifest. ITEM_POTION = 28. Only the id is asserted, never the quantity: Gen-3 bag quantities are XOR-encrypted with SaveBlock2.encryptionKey, and an assertion whose correctness depends on that key happening to be zero is a trap.",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 1376,
+   "type": "u16",
+   "sample": {
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "bag_item1",
+   "why": "THE BAG, slot 1 item id. ITEM_ANTIDOTE = 43. Note the manifest also lists two ball types, which AddBagItem files into the POKE BALLS pocket, not this one -- so slot 1 holding the antidote also proves the engine's own pocket routing ran, rather than the items being dumped in order.",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 1380,
+   "type": "u16",
+   "sample": {
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "badge_byte_hi",
+   "why": "THE BADGE CASE. flags[] is at 0x1270; FLAG_BADGE01_GET = SYSTEM_FLAGS + 0x7 = 0x860 + 7 = 0x867 = 2151. Byte 269 of flags (0x1270 + 269 = 0x137D) covers flag ids 2152-2159, which is badges 2 through 8 and nothing else -- so with 3 badges set this byte is exactly 0b11 = 3. This byte is chosen deliberately over the one holding badge 1, because that byte also carries seven unrelated system flags whose values would make the assertion depend on state this spec does not control.",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 4989,
+   "type": "u8",
+   "sample": {
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "dex_caught",
+   "why": "THE POKEDEX, caught bits. dexCaught is at 0x3619 (published by gStudioSaveOffsets, since global.h leaves it as 0x3???). Read as raw bytes spanning the Hoenn starters' national dex range so the assertion is an exact byte string rather than a threshold. OBSERVATION PROBE on first authoring: the expansion derives national dex numbers from species data rather than NATIONAL_DEX_* constants, so the exact expected bytes are read off a real run and pinned here rather than hand-derived.",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 13849,
+   "type": "bytes",
+   "length": 40,
+   "sample": {
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "dex_seen",
+   "why": "THE POKEDEX, seen bits. dexSeen at 0x3598. Must be a SUPERSET of caught -- the manifest's two design-stage species are seen but not caught, which is the two-stage 'specced vs implemented' signal the whole studio view is built on.",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 13720,
+   "type": "bytes",
+   "length": 40,
+   "sample": {
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "callback2",
+   "check": "resolves",
+   "at": "all",
+   "why": "CONTROL. Every sample landed on a named function, so the ROM was running."
+  },
+  {
+   "probe": "map_group",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 0,
+   "why": "Littleroot Town's map group. On stock Emerald a new game is INSIDE_OF_TRUCK and this spec FAILS."
+  },
+  {
+   "probe": "map_num",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 9,
+   "why": "Littleroot Town's map number. Proves the intro skip landed where the studio config says, not just somewhere."
+  },
+  {
+   "probe": "bag_item0",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 28,
+   "why": "ITEM_POTION from the manifest, in the bag. A stock new game leaves this pocket empty (0)."
+  },
+  {
+   "probe": "bag_item1",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 43,
+   "why": "ITEM_ANTIDOTE from the manifest, and proof the engine's pocket routing ran."
+  },
+  {
+   "probe": "badge_byte_hi",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 131,
+   "why": "0x83, and every bit is accounted for. Bits 0 and 1 are FLAG_BADGE02_GET and FLAG_BADGE03_GET -- the manifest asks for 3 badges, and badge 1 lives in the previous byte. Bits 2-6 are badges 4-8, correctly clear. Bit 7 is SYSTEM_FLAGS + 0xF = FLAG_VISITED_LITTLEROOT_TOWN, which the engine sets because the studio build genuinely puts the player in Littleroot -- so it is a second, independent confirmation of the start location rather than noise. Authored from an observed run and then explained, not fitted to make a test pass: an unexplained bit would have meant this probe was reading the wrong byte."
+  },
+  {
+   "probe": "dex_caught",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": "00000000000000000000000000000000000000000000000000000000000000480200000000000000",
+   "why": "THE POKEDEX, exact bytes. Byte 31 = 0x48 is bits 3 and 6: national dex 252 (Treecko) and 255 (Torchic), since bit index = dexNum - 1. Byte 32 = 0x02 is bit 1 = 258 (Mudkip). Exactly the three species the manifest marks 'caught', and nothing else in 40 bytes. Derived by hand from the manifest BEFORE the run and confirmed by it -- an exact 40-byte string cannot be satisfied by the kind of threshold accident a >= could."
+  },
+  {
+   "probe": "dex_seen",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": "00000000000000000000000000000000000000000000000000000000000000485200000000000000",
+   "why": "THE TWO-STAGE SIGNAL, which is the whole idea of the studio view. Identical to caught except byte 32 reads 0x52 rather than 0x02: bit 4 = 261 (Poochyena) and bit 6 = 263 (Zigzagoon), the two species the manifest marks 'seen' -- designed but not implemented. Seen is a strict superset of caught, and the difference is exactly the design-stage set."
+  },
+  {
+   "probe": "dex_caught",
+   "check": "always_valid",
+   "why": "The caught bitfield was readable at the offset the compiler published, so gStudioSaveOffsets resolved to real memory."
+  }
+ ]
+}

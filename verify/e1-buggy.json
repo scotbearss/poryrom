@@ -1,0 +1,328 @@
+{
+  "name": "e1-buggy",
+  "description": "ENGINE DEFECT E1 (pokemon/docs/52 sec.1; recorded in pokemon/docs/58), asserted from OUTSIDE the emulator on the UNFIXED side. src/level_caps.c lines 57 and 74 compare levelDifference with `>` where they need `>=`, so levelDifference == 5 indexes a [5] array at [5]. The fork under test runs GetSoftLevelCapExpValue once per boot for levelDifference 0..6 in both directions (cap-relative, so the recorded numbers do not depend on what the cap is) and leaves the results in gE1ProbeDown / gE1ProbeUp. This spec asserts the values the OUT-OF-BOUNDS READ produces, so it PASSes on pokemon/hacks/e1bug and MUST FAIL on pokemon/hacks/e1fix. It is the mirror image of e1-fixed.json: same probes, same controls, only the two discriminating expected values differ. Running both specs against both builds gives a 2x2 matrix whose diagonal is PASS and whose off-diagonal is FAIL. One direction alone would be a weaker claim -- a spec that fails on the other build might merely be a spec that fails.",
+  "symbols_from": "e1bug",
+  "symbols_from_why": "This spec probes gE1Probe* -- globals that exist ONLY in a hack fork, never in the pinned engine. pokemon/tests/test_verify_hack.py's ShippedSpecsAreWellFormed lint resolves every shipped spec's symbols against a .sym, and the engine's cannot resolve these; this key names the fork whose pokemon/hacks/<name>/pokeemerald.sym it must use instead. Forks are gitignored, so on a tree where this one has not been built the lint SKIPS the symbol half loudly rather than passing quietly. verify_hack.py itself ignores this key -- the .sym it uses comes from --rom/--sym and rom_pair.py, never from a spec.",
+  "screenshot": true,
+  "timeline": [
+    {
+      "name": "boot",
+      "frames": 600,
+      "keys": []
+    },
+    {
+      "name": "settle",
+      "frames": {
+        "random_range": [
+          30,
+          90
+        ]
+      },
+      "keys": []
+    }
+  ],
+  "probes": [
+    {
+      "id": "valid",
+      "why": "gE1ProbeValid. The probe sets this to 1 only after running all 14 calls with a level cap inside [8, MAX_LEVEL]. If the cap were nonsense the recorded numbers would mean nothing, so this must be 1 before any of them can be believed.",
+      "symbol": "gE1ProbeValid",
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "cap",
+      "why": "gE1ProbeCap -- GetCurrentLevelCap() as the probe saw it. NOT a discriminator and deliberately only range-asserted: with B_LEVEL_CAP_TYPE = LEVEL_CAP_FLAG_LIST the cap comes from the badge flags, and at AgbMain time the saveblock pointers are not installed yet (SetSaveBlocksPointers is called from src/intro.c). Recorded so the run is interpretable, not so it can be leaned on.",
+      "symbol": "gE1ProbeCap",
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "down5",
+      "why": "THE DISCRIMINATOR, src/level_caps.c line 74. gE1ProbeDown[5] = GetSoftLevelCapExpValue(cap+5, 6400) under B_EXP_CAP_TYPE = EXP_CAP_SOFT. levelDifference == 5 == ARRAY_COUNT(sExpScalingDown), so `>` is false and the else branch reads sExpScalingDown[5] -- one past the end.",
+      "symbol": "gE1ProbeDown",
+      "offset": 20,
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 60,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "up5",
+      "why": "THE DISCRIMINATOR, src/level_caps.c line 57. gE1ProbeUp[5] = GetSoftLevelCapExpValue(cap-5, 6400) under B_LEVEL_CAP_EXP_UP = TRUE. Same off-by-one on sExpScalingUp.",
+      "symbol": "gE1ProbeUp",
+      "offset": 20,
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 60,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "down_row",
+      "why": "The whole descending row as raw bytes, gE1ProbeDown[0..6]. An exact byte-string compare -- the check class doc 55 sec.9.4 found actually discriminates. Asserting the row as well as the element means a mis-offset read cannot quietly agree.",
+      "symbol": "gE1ProbeDown",
+      "offset": 0,
+      "type": "bytes",
+      "length": 28,
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "up_row",
+      "why": "The whole ascending row as raw bytes, gE1ProbeUp[0..6].",
+      "symbol": "gE1ProbeUp",
+      "offset": 0,
+      "type": "bytes",
+      "length": 28,
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "down4",
+      "why": "CONTROL. gE1ProbeDown[4] -- levelDifference 4, the last IN-BOUNDS index, identical in both builds. Its PASSing on the other build is what shows the failure is aimed at the one out-of-bounds index rather than at 'this is a different binary'.",
+      "symbol": "gE1ProbeDown",
+      "offset": 16,
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "down6",
+      "why": "CONTROL, the far side of the boundary. gE1ProbeDown[6] -- levelDifference 6 takes the clamped path both builds agree on.",
+      "symbol": "gE1ProbeDown",
+      "offset": 24,
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "up4",
+      "why": "CONTROL. gE1ProbeUp[4], last in-bounds index, identical in both builds.",
+      "symbol": "gE1ProbeUp",
+      "offset": 16,
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "up6",
+      "why": "CONTROL, far side. gE1ProbeUp[6], the clamped path, identical in both builds.",
+      "symbol": "gE1ProbeUp",
+      "offset": 24,
+      "type": "u32",
+      "sample": {
+        "at": [
+          60
+        ],
+        "every": 120,
+        "at_step_end": [
+          "settle"
+        ]
+      }
+    },
+    {
+      "id": "vblank",
+      "why": "gMain.vblankCounter1 (include/main.h offset 0x20). The probe values came out of a machine that was executing, not out of a file on disk.",
+      "symbol": "gMain",
+      "offset": 32,
+      "type": "u32",
+      "sample": {
+        "at": [
+          1
+        ],
+        "every": 60
+      }
+    },
+    {
+      "id": "callback2",
+      "why": "gMain.callback2 (offset 0x04), resolved against the .sym of the ROM actually under test.",
+      "symbol": "gMain",
+      "offset": 4,
+      "type": "ptr",
+      "sample": {
+        "at": [
+          1
+        ],
+        "every": 60
+      }
+    }
+  ],
+  "assert": [
+    {
+      "probe": "down5",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": 0,
+      "why": "DISCRIMINATOR 1 (line 74). Expected 0. 6400 / (the word one past sExpScalingDown, = 3200826306, the first word of __compound_literal.0) = 0 by integer division. The fixed build clamps to index 4 and returns 100, so this FAILS there."
+    },
+    {
+      "probe": "up5",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": 8000,
+      "why": "DISCRIMINATOR 2 (line 57). Expected 8000. 6400 + 6400/(the word one past sExpScalingUp, which IS sExpScalingDown[0] = 4). The fixed build clamps to index 4 and returns 12800, so this FAILS there."
+    },
+    {
+      "probe": "down_row",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": "400600002003000090010000c8000000640000000000000064000000",
+      "why": "DISCRIMINATOR 1, as the whole 7-element row, little-endian: 1600 800 400 200 100 0 100. The other build reads 1600 800 400 200 100 100 100."
+    },
+    {
+      "probe": "up_row",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": "40060000201c0000401f00008025000000320000401f000000320000",
+      "why": "DISCRIMINATOR 2, as the whole 7-element row, little-endian: 1600 7200 8000 9600 12800 8000 12800. The other build reads 1600 7200 8000 9600 12800 12800 12800."
+    },
+    {
+      "probe": "valid",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": 1,
+      "why": "The probe completed with a sane level cap. Without this, every number above could be an artefact of a garbage cap rather than of the arithmetic under test."
+    },
+    {
+      "probe": "cap",
+      "check": "in_range",
+      "min": 8,
+      "max": 100,
+      "why": "SUPPORTING ONLY. in_range is on doc 55 sec.9.4's weak list (it survives an address shift) and is never load-bearing here."
+    },
+    {
+      "probe": "down4",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": 100,
+      "why": "CONTROL. Must PASS on BOTH builds -- the last in-bounds index is untouched by the fix."
+    },
+    {
+      "probe": "down6",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": 100,
+      "why": "CONTROL, far side of the boundary. Must PASS on BOTH builds."
+    },
+    {
+      "probe": "up4",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": 12800,
+      "why": "CONTROL. Must PASS on BOTH builds."
+    },
+    {
+      "probe": "up6",
+      "check": "compare",
+      "at": "all",
+      "op": "==",
+      "value": 12800,
+      "why": "CONTROL, far side. Must PASS on BOTH builds."
+    },
+    {
+      "probe": "down_row",
+      "check": "always_valid",
+      "why": "Every sample of the row was readable."
+    },
+    {
+      "probe": "down5",
+      "check": "sample_count",
+      "op": ">=",
+      "value": 4,
+      "why": "SUPPORTING. The value was re-read many times across the run, not once at a lucky moment. sample_count is on doc 57's weak list."
+    },
+    {
+      "probe": "vblank",
+      "check": "strictly_increases",
+      "why": "The engine was alive and advancing for the whole run."
+    },
+    {
+      "probe": "callback2",
+      "check": "resolves",
+      "at": "all",
+      "allow_zero": true,
+      "why": "Every non-null callback resolves in THIS build's own .sym. For a build in which essentially every ROM symbol moved, that is a real statement about the --rom/--sym pairing, not a formality."
+    },
+    {
+      "probe": "callback2",
+      "check": "symbol_sequence",
+      "op": "contains_in_order",
+      "value": [
+        "CB2_InitCopyrightScreenAfterBootup",
+        "CB2_ExpansionIntro",
+        "MainCB2_Intro"
+      ],
+      "why": "Doc 54 sec.3's boot progression, by name. It holds on BOTH builds, so a FAIL of this spec on the other build cannot be explained away as 'that build does not boot'."
+    }
+  ]
+}

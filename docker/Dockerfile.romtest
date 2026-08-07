@@ -1,0 +1,51 @@
+# pokemon-romtest — the `make check` image.
+#
+# Extends the toolkit build image with the two things expansion's test framework
+# needs and our base image lacks:
+#
+#   1. libelf  — mgba-rom-test loads the test ELF directly (USE_ELF=ON).
+#   2. mgba-rom-test — a DIFFERENT binary from mgba-headless. The engine vendors
+#      only a Linux **x86-64** build (tools/mgba/mgba-rom-test), which cannot run
+#      on Apple Silicon. We build it from source for the host arch instead.
+#
+# NOTE THE COMMIT. mgba-rom-test does NOT exist at the mGBA commit our main
+# Dockerfile pins (5157ce20, master): src/platform/test/rom-test-main.c was
+# REMOVED from mGBA upstream after 0.10. It is present at dbffb46c4 — which is
+# exactly the commit expansion's own vendored binary was built from
+# (tools/mgba/README.md). So this image pins dbffb46c4 for rom-test only;
+# mgba-headless stays on the base image's newer pin. Two mGBA builds, on purpose.
+#
+# Build:
+#   docker build --platform linux/arm64 -f pokemon/docker/Dockerfile.romtest \
+#     -t pokemon-romtest:latest pokemon/docker
+FROM rombench-build:1
+
+ARG MGBA_ROM_TEST_COMMIT=dbffb46c4e7d2e7a2cbed7c3488cece4c2176d4c
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libelf-dev coreutils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/mgba-romtest-src && cd /opt/mgba-romtest-src \
+    && git init -q . \
+    && git remote add origin https://github.com/mgba-emu/mgba.git \
+    && git fetch -q --depth 1 origin ${MGBA_ROM_TEST_COMMIT} \
+    && git checkout -q FETCH_HEAD \
+    && cmake -S /opt/mgba-romtest-src -B /opt/mgba-romtest-build -G Ninja \
+        -DBUILD_ROM_TEST=ON -DUSE_PNG=ON \
+        -DBUILD_QT=OFF -DBUILD_SDL=OFF -DUSE_FFMPEG=OFF -DUSE_DISCORD_RPC=OFF \
+        -DUSE_LIBZIP=OFF -DUSE_MINIZIP=OFF -DUSE_EDITLINE=OFF \
+        -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build /opt/mgba-romtest-build --target mgba-rom-test -j"$(nproc)" \
+    && cp /opt/mgba-romtest-build/test/mgba-rom-test /usr/local/bin/mgba-rom-test \
+    # libmgba 0.11.0 from THIS commit, installed under its own name so it cannot
+    # collide with the base image's libmgba (a different, newer build).
+    && mkdir -p /opt/mgba-romtest-lib \
+    && cp -P /opt/mgba-romtest-build/libmgba.so* /opt/mgba-romtest-lib/ \
+    && patchelf --set-rpath /opt/mgba-romtest-lib /usr/local/bin/mgba-rom-test 2>/dev/null \
+       || echo "patchelf unavailable; relying on LD_LIBRARY_PATH" \
+    && rm -rf /opt/mgba-romtest-build /opt/mgba-romtest-src
+
+ENV LD_LIBRARY_PATH=/opt/mgba-romtest-lib
+
+WORKDIR /project

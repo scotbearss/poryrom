@@ -1,0 +1,278 @@
+{
+ "name": "input-advances-intro",
+ "symbols_from": "engine",
+ "symbols_from_why": "Runs against the PINNED BASE ROM: every symbol it reads is vanilla.",
+ "description": "Proves the harness's INPUT path -- that keys named in a spec timeline actually reach the engine. Ten randomized-length A presses skip the intro and drive the boot state machine to the title screen and main menu. boot-progression.json runs the same ROM for the same span with NO input and never gets past MainCB2_Intro; the difference between the two progressions is the proof that emu:setKeys did something. Press and release lengths are randomized on purpose: an assertion that only holds for one exact scripted replay is an assertion about the replay, not about the game.",
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 420,
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "frames": {
+    "random_range": [
+     12,
+     24
+    ]
+   },
+   "keys": []
+  },
+  {
+   "name": "settle",
+   "frames": 180,
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "callback2",
+   "why": "gMain.callback2 again -- the same probe as boot-progression, so the only thing that differs between the two runs is the input.",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "every": 20,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "vblank",
+   "symbol": "gMain",
+   "offset": 32,
+   "type": "u32",
+   "sample": {
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "vblank",
+   "check": "strictly_increases",
+   "why": "The engine stayed alive throughout; input did not hang it."
+  },
+  {
+   "probe": "callback2",
+   "check": "symbol_sequence",
+   "op": "contains_in_order",
+   "value": [
+    "CB2_InitCopyrightScreenAfterBootup",
+    "CB2_ExpansionIntro",
+    "CB2_InitTitleScreen",
+    "CB2_MainMenu"
+   ],
+   "why": "THE INPUT PROOF. CB2_InitTitleScreen and CB2_MainMenu are unreachable in this frame span without a button press -- the no-input run of boot-progression.json is still sitting in MainCB2_Intro at the same point. Reaching them proves the timeline's keys were delivered, in order, through emu:setKeys."
+  },
+  {
+   "probe": "callback2",
+   "check": "distinct_symbols_at_least",
+   "count": 5,
+   "why": "Five distinct screens under input vs three without it."
+  },
+  {
+   "probe": "callback2",
+   "check": "resolves",
+   "at": "all",
+   "allow_zero": true,
+   "why": "Every screen reached is a real symbol; nothing went off into garbage."
+  }
+ ]
+}

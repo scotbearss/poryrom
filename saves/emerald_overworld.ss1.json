@@ -1,0 +1,20 @@
+{
+  "rom_sha256": "99c83c80f3c37eafc29e1951d407ffb08980539c6089d645094a65428585be86",
+  "savestate_sha256": "4b091276a1a2cb7073e378ceb82c6da29745d3226073917a6a51329913a3f8b4",
+  "frames": 15046,
+  "stage": "overworld",
+  "final_callback2": "CB2_Overworld",
+  "map": "0.9",
+  "camera": [
+    5,
+    9
+  ],
+  "player": [
+    12,
+    16
+  ],
+  "facing": 1,
+  "partyCount": 0,
+  "party": [],
+  "wall_seconds": 3.5
+}

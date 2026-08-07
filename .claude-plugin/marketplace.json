@@ -1,0 +1,14 @@
+{
+  "name": "rombench",
+  "owner": {
+    "name": "scotbearss"
+  },
+  "plugins": [
+    {
+      "name": "rombench",
+      "source": "./",
+      "description": "GBA ROM-hacking workbench: scaffold, build, verify, deploy — in plain English.",
+      "version": "0.9.0"
+    }
+  ]
+}

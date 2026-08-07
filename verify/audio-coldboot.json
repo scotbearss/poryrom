@@ -1,0 +1,34 @@
+{
+ "name": "audio-coldboot",
+ "symbols_from": "engine",
+ "symbols_from_why": "Runs against the PINNED BASE ROM: every symbol it reads is vanilla.",
+ "description": "Doc 67 item J, instrument shakedown. Identical to audio-smoke except it COLD BOOTS instead of resuming a savestate. audio-smoke captured 25 s of perfect silence off emerald_overworld.ss1, and a savestate restoring RAM without the APU's own state is one of exactly two explanations; the other is that the tap reads the wrong buffer. Emerald's intro plays music within a few hundred frames, so this run discriminates them. Asserts almost nothing on purpose -- it is an observation.",
+ "audio": true,
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 1800,
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "cb2",
+   "why": "Which screen the run reached, so a silent result can be attributed.",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "every": 300
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "cb2",
+   "check": "always_valid",
+   "why": "SUPPORTING. Observation spec."
+  }
+ ]
+}

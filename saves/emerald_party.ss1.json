@@ -1,0 +1,36 @@
+{
+  "rom_sha256": "99c83c80f3c37eafc29e1951d407ffb08980539c6089d645094a65428585be86",
+  "savestate_sha256": "eaae1e12f3aaa4f03e61acade25f953c7e5266071669feb74183e89656d4c0bd",
+  "frames": 31070,
+  "stage": "party",
+  "final_callback2": "CB2_Overworld",
+  "map": "1.4",
+  "camera": [
+    6,
+    5
+  ],
+  "player": [
+    13,
+    12
+  ],
+  "facing": 2,
+  "partyCount": 1,
+  "party": [
+    {
+      "slot": 0,
+      "personality": 4153254551,
+      "otId": 2262802342,
+      "species": 255,
+      "heldItem": 0,
+      "experience": 149,
+      "checksum_stored": 63500,
+      "checksum_computed": 63500,
+      "checksum_ok": true,
+      "level": 5,
+      "hp": 20,
+      "maxHP": 20,
+      "status": 0
+    }
+  ],
+  "wall_seconds": 7.2
+}

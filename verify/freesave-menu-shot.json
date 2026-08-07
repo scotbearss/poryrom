@@ -1,0 +1,25 @@
+{
+  "name": "freesave-menu-shot",
+  "description": "FREESAVE, THE PICTURE. Cold boot, let the intro run, ONE press of A to get from the title screen to the main menu, and stop. Run it against each of the three builds in turn against the SAME .sav; the main menu is where the whole round becomes visible to a player, because it is the screen that either offers CONTINUE or does not, and it is where the play time and badge count are printed.\n\nExactly one A press, and it is at a screen that cannot commit anything: the title screen's A only opens the menu. A second press would select CONTINUE and start the game — which is how the first version of the read specs accidentally started a NEW GAME and zeroed every probe it was about to read.\n\nThis spec asserts almost nothing on purpose. It exists to leave a PNG. The claims live in freesave-read-{control,flipped,swapped}.json.",
+  "persist_dir": "freesave",
+  "symbols_from": "freesave",
+  "symbols_from_why": "gFreeSaveHookLatch and gFreeSaveOffsets are fork-only symbols.",
+  "screenshot": true,
+  "timeline": [
+    {"name": "cold_boot", "frames": 600, "keys": []},
+    {"name": "let_the_intro_play_out", "frames": 3600, "keys": []},
+    {"name": "title_to_menu", "frames": 8, "keys": ["A"]},
+    {"name": "hold_on_the_menu", "frames": 400, "keys": []}
+  ],
+  "probes": [
+    {"id": "status", "why": "OBSERVATION. Which of the three arms this run is, in one number.",
+     "symbol": "gSaveFileStatus", "type": "u16", "sample": {"every": 200}},
+    {"id": "cb2", "why": "OBSERVATION. Where the single A press left the run.",
+     "symbol": "gMain", "offset": 4, "type": "ptr", "sample": {"every": 100}}
+  ],
+  "assert": [
+    {"probe": "cb2", "check": "symbol_sequence", "op": "contains_in_order",
+     "value": ["CB2_InitCopyrightScreenAfterBootup", "MainCB2_Intro"],
+     "why": "The only assertion here: the boot was cold, so the picture is of a real load rather than of a resumed state."}
+  ]
+}

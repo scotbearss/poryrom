@@ -1,0 +1,102 @@
+{
+ "name": "climbcliff-move-control",
+ "symbols_from": "climbcliffs",
+ "screenshot": true,
+ "description": "docs 77 \u00a75 cliff 2, CONTROL arm: an ordinary movement action. The pair's clean half -- without it a frozen cliff arm is equally consistent with a broken fixture (doc 61 \u00a74).",
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 1200,
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "name": "settle",
+   "frames": 600,
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "arm",
+   "why": "which arm the boot key selected. Assert that the thing under test happened, or a green run may be a run of something else.",
+   "symbol": "gCliffProbeArm",
+   "type": "u32",
+   "sample": {
+    "every": 60
+   }
+  },
+  {
+   "id": "cut_index",
+   "why": "FIELD_MOVE_CUT's value, read out of the ROM through CliffGetCutFieldMoveIndex rather than restated here.",
+   "symbol": "gCliffProbeCutIndex",
+   "type": "u32",
+   "sample": {
+    "every": 60
+   }
+  },
+  {
+   "id": "badge_gate",
+   "why": "THE WELD AS A NUMBER: FLAG_BADGE01_GET + FIELD_MOVE_CUT, which is the flag CursorCb_FieldMove will actually test.",
+   "symbol": "gCliffProbeBadgeGate",
+   "type": "u32",
+   "sample": {
+    "every": 60
+   }
+  },
+  {
+   "id": "last_action",
+   "why": "the last movement action id handed to the VM.",
+   "symbol": "gCliffProbeLastActionId",
+   "type": "u32",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "out_of_range",
+   "why": "how many of those were past the end of the table.",
+   "symbol": "gCliffProbeOutOfRange",
+   "type": "u32",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "ticks",
+   "why": "monotone frame counter. THE probe that separates 'the cliff did something' from 'the ROM never ran'.",
+   "symbol": "gCliffProbeTicks",
+   "type": "u32",
+   "sample": {
+    "every": 30
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "arm",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 1,
+   "why": "the control arm was selected."
+  },
+  {
+   "probe": "out_of_range",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 0,
+   "why": "SUPPORTING, weak under a shift: nothing out of range was handed over."
+  },
+  {
+   "probe": "ticks",
+   "check": "compare",
+   "at": "last",
+   "op": ">=",
+   "value": 1000,
+   "why": "the game is alive at the end -- the half the cliff arm is compared to. NOT strictly_increases: OverworldBasic does not run every frame, so the counter legitimately plateaus between samples and the strict form fails on a perfectly healthy run."
+  }
+ ]
+}

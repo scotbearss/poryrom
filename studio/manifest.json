@@ -1,0 +1,25 @@
+{
+  "_comment": [
+    "SLICE 0: hand-written, deliberately fake build state. Slice 1 replaces this",
+    "with a generator that reads a real hack's actual contents.",
+    "",
+    "The numbers here are chosen to be distinctive -- 3 caught / 2 seen / 4 items /",
+    "3 badges is a combination that cannot plausibly arise by accident in a stock",
+    "Emerald new game (which has 0 of everything). That is what lets verification",
+    "prove the ROM is reflecting THIS file rather than just booting."
+  ],
+  "species": [
+    { "id": "SPECIES_TREECKO",   "state": "caught", "note": "fully implemented" },
+    { "id": "SPECIES_TORCHIC",   "state": "caught", "note": "fully implemented" },
+    { "id": "SPECIES_MUDKIP",    "state": "caught", "note": "fully implemented" },
+    { "id": "SPECIES_POOCHYENA", "state": "seen",   "note": "designed, not built" },
+    { "id": "SPECIES_ZIGZAGOON", "state": "seen",   "note": "designed, not built" }
+  ],
+  "items": [
+    { "id": "ITEM_POTION",    "qty": 1 },
+    { "id": "ITEM_POKE_BALL", "qty": 5 },
+    { "id": "ITEM_ANTIDOTE",  "qty": 1 },
+    { "id": "ITEM_GREAT_BALL", "qty": 2 }
+  ],
+  "badges": 3
+}

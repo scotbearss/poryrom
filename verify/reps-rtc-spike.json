@@ -1,0 +1,124 @@
+{
+ "name": "reps-rtc-spike",
+ "symbols_from": "engine",
+ "symbols_from_why": "Runs against the PINNED BASE ROM: every symbol it reads is vanilla.",
+ "description": "`reps` SLICE 1 RTC SPIKE -- an OBSERVATION, not a feature test. scope.md folds it into slice 1 deliberately, to buy the answer to slice 2's one genuine unknown a slice early: can a real-RTC countdown be verified headlessly at all? mGBA derives the emulated RTC from host wall-clock time, so a headless run at many times real speed may see almost no real seconds pass -- which would make a 60-second timed set cost 60 real seconds per seed and be hostile to a 4-seed spec. This spec needs NO code change: gLocalTime is an engine global (struct Time { s16 days; s8 hours; s8 minutes; s8 seconds; }) that src/rtc.c fills in. It samples that global across a long cold-boot run and simply records what it does. The assertions below deliberately assert only that the machine was alive and the read was valid -- the ANSWER is in the printed sample table, not in a PASS. A spike that asserted a specific RTC rate would be asserting the host's clock, which is not a property of the ROM.",
+ "screenshot": false,
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 600,
+   "keys": []
+  },
+  {
+   "name": "observe",
+   "frames": 3000,
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "rtc_raw",
+   "why": "gLocalTime as raw bytes -- days (s16), hours, minutes, seconds. Sampled densely across 3600 frames (~60 s of EMULATED time at 60 fps) so the relationship between emulated frames and RTC seconds is visible directly in the table rather than inferred.",
+   "symbol": "gLocalTime",
+   "offset": 0,
+   "type": "bytes",
+   "length": 6,
+   "sample": {
+    "at": [
+     1,
+     60,
+     300
+    ],
+    "every": 300,
+    "at_step_end": [
+     "boot",
+     "observe"
+    ]
+   }
+  },
+  {
+   "id": "rtc_seconds",
+   "why": "gLocalTime.seconds (offset 4) on its own, so a change is legible at a glance in the sample list.",
+   "symbol": "gLocalTime",
+   "offset": 4,
+   "type": "u8",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 300,
+    "at_step_end": [
+     "observe"
+    ]
+   }
+  },
+  {
+   "id": "rtc_minutes",
+   "why": "gLocalTime.minutes (offset 3).",
+   "symbol": "gLocalTime",
+   "offset": 3,
+   "type": "u8",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 300,
+    "at_step_end": [
+     "observe"
+    ]
+   }
+  },
+  {
+   "id": "vblank",
+   "why": "gMain.vblankCounter1. Establishes how many frames actually elapsed, which is the denominator of the whole question.",
+   "symbol": "gMain",
+   "offset": 32,
+   "type": "u32",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 300,
+    "at_step_end": [
+     "observe"
+    ]
+   }
+  },
+  {
+   "id": "callback2",
+   "why": "gMain.callback2. Records WHERE the game was during the observation -- src/rtc.c's RtcCalcLocalTime() is driven from the overworld, so which callback was running decides whether gLocalTime was being refreshed at all. Without this the sample table would be uninterpretable.",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 300,
+    "at_step_end": [
+     "observe"
+    ]
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "rtc_raw",
+   "check": "always_valid",
+   "why": "The global was readable at every sample. Weak by doc 55 sec.9.4's classification, and deliberately so: this spec's job is to MEASURE, and a spike that manufactured a strong assertion about the host's clock would be asserting the wrong machine."
+  },
+  {
+   "probe": "vblank",
+   "check": "strictly_increases",
+   "why": "3600 frames really elapsed. This is the load-bearing assertion here -- it is what makes the recorded RTC samples a measurement rather than a snapshot."
+  },
+  {
+   "probe": "callback2",
+   "check": "resolves",
+   "at": "all",
+   "allow_zero": true,
+   "why": "Every non-null callback resolves in this build's own .sym, so the recorded location of the game is a name and not a number."
+  }
+ ]
+}

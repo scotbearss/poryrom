@@ -1,0 +1,146 @@
+{
+ "name": "party-state-counterfactual",
+ "symbols_from": "engine",
+ "symbols_from_why": "Runs against the PINNED BASE ROM: every symbol it reads is vanilla.",
+ "description": "The third counterfactual for party-state, and the only one that is orthogonal to BOTH of the others. --counterfactual moves the addresses; --no-savestate changes the memory contents; this spec changes neither -- it reads exactly the right bytes out of exactly the right save state and expects the WRONG values. It is the one that proves the assertions in party-state.json are load-bearing rather than tautological: run it with --expect-fail and it must exit 0.",
+ "savestate": "emerald_party.ss1",
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "resume",
+   "frames": 120,
+   "keys": []
+  },
+  {
+   "name": "idle",
+   "frames": {
+    "random_range": [
+     60,
+     180
+    ]
+   },
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "lead_level",
+   "symbol": "gPlayerParty",
+   "offset": 84,
+   "type": "u8",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "lead_hp",
+   "symbol": "gPlayerParty",
+   "offset": 86,
+   "type": "u16",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "party_count",
+   "symbol": "gPlayerPartyCount",
+   "type": "u8",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "sb1_mapnum",
+   "symbol": "gSaveBlock1Ptr",
+   "deref": true,
+   "offset": 5,
+   "type": "u8",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "sb1_ptr",
+   "symbol": "gSaveBlock1Ptr",
+   "type": "ptr",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "callback2",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "battle_outcome",
+   "symbol": "gBattleOutcome",
+   "type": "u8",
+   "sample": {
+    "every": 30
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "lead_level",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 6,
+   "why": "WRONG BY ONE. The lead is level 5. An off-by-one is the failure a level-cap or EXP-curve hack would actually produce, so this is the shape of error the harness has to be able to see."
+  },
+  {
+   "probe": "lead_hp",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 19,
+   "why": "WRONG BY ONE. Current HP is 20. Same argument: a damage-formula change moves HP by small amounts, not by orders of magnitude."
+  },
+  {
+   "probe": "party_count",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 2,
+   "why": "WRONG. The player owns one Pokemon, not two."
+  },
+  {
+   "probe": "sb1_mapnum",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 9,
+   "why": "WRONG. The deref reaches map 1.4 (Birch's lab), not 1.9. Proves the pointer chase is reading the map and not just any readable byte."
+  },
+  {
+   "probe": "sb1_ptr",
+   "check": "symbol_at",
+   "at": "all",
+   "op": "==",
+   "value": "gSaveblock2",
+   "why": "WRONG SYMBOL. gSaveBlock1Ptr resolves into gSaveblock1; naming the other saveblock must fail. This is the check that would catch a probe wired to the wrong pointer."
+  },
+  {
+   "probe": "callback2",
+   "check": "symbol_at",
+   "at": "all",
+   "op": "==",
+   "value": "MainCB2_Intro",
+   "why": "WRONG SCREEN. The state resumes into CB2_Overworld; expecting the intro callback is what a spec would look like if it had silently failed to load the save state at all."
+  },
+  {
+   "probe": "battle_outcome",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 2,
+   "why": "WRONG OUTCOME. B_OUTCOME_LOST where the engine holds B_OUTCOME_WON. This is the assertion shape a difficulty hack's verification will live or die on, so it had better be able to fail."
+  }
+ ]
+}

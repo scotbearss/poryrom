@@ -1,0 +1,94 @@
+{
+ "name": "climbcliff-badge-control",
+ "symbols_from": "climbcliffs",
+ "screenshot": true,
+ "description": "docs 77 \u00a75 cliff 1, CONTROL build: the field move APPENDED past the badge-mapped range, so CUT keeps enum 0 and is gated on the badge the player is holding.",
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 1200,
+   "keys": [
+    "A"
+   ]
+  },
+  {
+   "name": "settle",
+   "frames": 600,
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "arm",
+   "why": "which arm the boot key selected. Assert that the thing under test happened, or a green run may be a run of something else.",
+   "symbol": "gCliffProbeArm",
+   "type": "u32",
+   "sample": {
+    "every": 60
+   }
+  },
+  {
+   "id": "cut_index",
+   "why": "FIELD_MOVE_CUT's value, read out of the ROM through CliffGetCutFieldMoveIndex rather than restated here.",
+   "symbol": "gCliffProbeCutIndex",
+   "type": "u32",
+   "sample": {
+    "every": 60
+   }
+  },
+  {
+   "id": "badge_gate",
+   "why": "THE WELD AS A NUMBER: FLAG_BADGE01_GET + FIELD_MOVE_CUT, which is the flag CursorCb_FieldMove will actually test.",
+   "symbol": "gCliffProbeBadgeGate",
+   "type": "u32",
+   "sample": {
+    "every": 60
+   }
+  },
+  {
+   "id": "last_action",
+   "why": "the last movement action id handed to the VM.",
+   "symbol": "gCliffProbeLastActionId",
+   "type": "u32",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "out_of_range",
+   "why": "how many of those were past the end of the table.",
+   "symbol": "gCliffProbeOutOfRange",
+   "type": "u32",
+   "sample": {
+    "every": 30
+   }
+  },
+  {
+   "id": "ticks",
+   "why": "monotone frame counter. THE probe that separates 'the cliff did something' from 'the ROM never ran'.",
+   "symbol": "gCliffProbeTicks",
+   "type": "u32",
+   "sample": {
+    "every": 30
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "cut_index",
+   "check": "compare",
+   "at": "last",
+   "op": "==",
+   "value": 0,
+   "why": "CUT is where it has always been."
+  },
+  {
+   "probe": "badge_gate",
+   "check": "compare",
+   "at": "last",
+   "op": ">=",
+   "value": 1,
+   "why": "SUPPORTING and deliberately weak: the flag id itself is printed for the record, but the claim lives in cut_index, which needs no copy of FLAG_BADGE01_GET's expression to check."
+  }
+ ]
+}

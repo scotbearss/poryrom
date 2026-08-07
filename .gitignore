@@ -1,0 +1,72 @@
+# The pokeemerald engine clone and all hack forks are Nintendo-derived and are
+# deliberately kept OUT of this repo's git (see docs/research/34 §7).
+# This repo tracks only our ORIGINAL tooling under tools/.
+engine/
+hacks/
+*.gba
+*.sym
+*.map
+
+# DECIDED 2026-07-26 (the question pokemon/CLAUDE.md had left open for the user).
+#
+# THE STATES THEMSELVES STAY OUT. An mGBA save state is a verbatim RAM snapshot
+# of a running Nintendo-derived ROM — decompressed graphics, text and all — so it
+# is squarely the class of thing the block above exists to exclude, and git
+# history is permanent. Two further reasons that settle it independently of the
+# copyright one:
+#   * they are BUILD-SPECIFIC. verify_hack.py hard-fails exit 2 on a ROM-sha
+#     mismatch (docs 55 §9.3), and every slice rebuilds the ROM — so a committed
+#     state is dead weight by the next slice. Tracking them means a new ~40 KB
+#     binary in history per slice, permanently, for artefacts with a one-slice
+#     shelf life. That is the worst possible thing to put in git.
+#   * tools/make_savestate.py regenerates them from a scripted input
+#     timeline, so the RECIPE is tracked even when the output is not.
+*.ss1
+
+# THE SIDECARS ARE TRACKED, and deliberately so — this is the half the old
+# blanket `saves/` rule got wrong. A .ss1.json is 100% OUR data: rom_sha256,
+# savestate_sha256, frame count, final callback, map/camera/player, and the exact
+# party values a spec was written against. No Nintendo bytes. It is precisely the
+# provenance that tells a future session whether a regenerated state matches the
+# one the specs were authored against, and what to re-derive if it does not.
+# Ignoring it threw away the only durable record of what a state contained.
+#
+# CAVEAT that makes the sidecars load-bearing rather than nice-to-have:
+# regenerating a state yields a DIFFERENT starter. The boot RNG is seeded from
+# the RTC — SeedRngWithRtc(), src/main.c:108, and mGBA derives the RTC from host
+# wall-clock time — so the seed is literally the moment you ran the tool. Until
+# that is pinned, the sidecar is the only thing that says what the old state held.
+
+# CAPTURED AUDIO IS A NINTENDO ASSET (2026-08-05, doc 76).
+# The mAVStream tap records the emulator's actual output, so a .wav from a
+# vanilla-music run is Game Freak's composition verbatim -- not a screenshot of
+# our own fixture, which is what docs/assets/*.png are. Same three-part argument
+# that keeps *.ss1 out: it is Nintendo-derived, it is regenerable by one command
+# (verify_hack.py <spec> with "audio": true), and the recipe is tracked while
+# the artifact is not. Listen locally; never commit.
+# (An earlier form of this rule pointed at a directory the assets had moved out
+# of and silently matched nothing -- probe an ignore rule with `git check-ignore`
+# whenever it or its subject changes address.)
+docs/wiki/assets/*-audio/*.wav
+*.pcm
+*.pcm.rate
+
+# ---------------------------------------------------------------------------
+# INHERITED FROM THE PARENT REPO'S ROOT .gitignore, 2026-08-06 (doc 82 F9).
+#
+# These rules used to live in retro-game-toolkit/.gitignore, one level ABOVE
+# pokemon/. `git subtree split` carries the subdirectory's own ignore file and
+# knows nothing about its parent's, so extraction silently DROPPED every rule
+# here -- and the first verification run in the new repo staged a
+# `pokeemerald.sav`: player data out of a Nintendo-derived ROM, exactly the
+# class this project fences out of git, caught only by a dry run.
+#
+# A protection that lives in a file you are not moving is a protection you lose.
+# ---------------------------------------------------------------------------
+.DS_Store
+build/
+*.elf
+*.sav
+.pipeline/
+.claude/settings.local.json
+.claude/worktrees/

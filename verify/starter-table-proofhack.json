@@ -1,0 +1,191 @@
+{
+ "name": "starter-table-proofhack",
+ "symbols_from": "proofhack",
+ "symbols_from_why": "Asserts the proofhack fork's edited starter table; PASSes only there.",
+ "description": "COLD-BOOT ROM-data spec. Reads sStarterMon (src/starter_choose.c) by symbol out of the running ROM and asserts the PROOFHACK values: middle starter CHARMANDER (4), outer two untouched. PASSes on pokemon/hacks/proofhack/pokeemerald.gba and MUST FAIL on the stock pokemon/engine/pokeemerald.gba. Its mirror image is starter-table-stock.json, which asserts the stock values and fails on the hack. Together they are the Slice 2 discrimination proof: the same harness, the same probes, two builds that differ by ONE byte, and the verdicts come out opposite. No save state is used or usable -- mGBA states are pinned to an exact ROM sha256, so a savestate spec structurally cannot cross builds (doc 55 \u00a79.3). Everything here is readable at reset from ROM, so no input timeline is needed to reach the assertion; the timeline exists only to prove the values were read out of a machine that was actually executing.",
+ "screenshot": true,
+ "timeline": [
+  {
+   "name": "boot",
+   "frames": 600,
+   "keys": []
+  },
+  {
+   "name": "settle",
+   "frames": {
+    "random_range": [
+     30,
+     90
+    ]
+   },
+   "keys": []
+  }
+ ],
+ "probes": [
+  {
+   "id": "starter_row",
+   "why": "THE WHOLE TABLE, as raw bytes. static const u16 sStarterMon[3] at src/starter_choose.c:113, little-endian, so the stock ROM reads fc00 ff00 0201 = TREECKO(252) TORCHIC(255) MUDKIP(258). This is the strongest single probe available: an exact byte-string compare over the entire array, which cannot be satisfied by a threshold accident the way a >= or a != can (doc 55 \u00a79.4).",
+   "symbol": "sStarterMon",
+   "offset": 0,
+   "type": "bytes",
+   "length": 6,
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 120,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "starter_mid",
+   "why": "THE ONE CHANGED VALUE. sStarterMon[1], the middle starter. Stock: SPECIES_TORCHIC = 255. proofhack: SPECIES_CHARMANDER = 4. This is the entire behavioural difference between the two builds -- one u16, one byte on disk -- and detecting it is what this spec exists for.",
+   "symbol": "sStarterMon",
+   "offset": 2,
+   "type": "u16",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "starter_first",
+   "why": "CONTROL. sStarterMon[0] = SPECIES_TREECKO = 252 in BOTH builds. Deliberately not edited. If this assertion failed on the stock ROM too, the spec would only be proving 'these are different files'; because it PASSes on both, the FAIL on stock is proven to be TARGETED at the byte that actually changed.",
+   "symbol": "sStarterMon",
+   "offset": 0,
+   "type": "u16",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "starter_last",
+   "why": "CONTROL, the other side. sStarterMon[2] = SPECIES_MUDKIP = 258 in both builds. Also proves the u16 probe is not reading past its element: 258 = 0x0102 is the one value here whose two bytes differ, so a mis-sized or mis-offset read shows up as a wrong number rather than silently agreeing.",
+   "symbol": "sStarterMon",
+   "offset": 4,
+   "type": "u16",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60,
+    "at_step_end": [
+     "settle"
+    ]
+   }
+  },
+  {
+   "id": "vblank",
+   "why": "gMain.vblankCounter1 (include/main.h offset 0x20), incremented by the VBlank IRQ handler. Present so the table reads above are not a static file diff dressed up as a test: the ROM was executing its main loop while the harness read it.",
+   "symbol": "gMain",
+   "offset": 32,
+   "type": "u32",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60
+   }
+  },
+  {
+   "id": "callback2",
+   "why": "gMain.callback2 (offset 0x04), resolved against the .sym of the ROM ACTUALLY UNDER TEST. Both builds must still boot and advance -- a hack that changed a data value and broke the engine would show up here, not in the table probes.",
+   "symbol": "gMain",
+   "offset": 4,
+   "type": "ptr",
+   "sample": {
+    "at": [
+     1
+    ],
+    "every": 60
+   }
+  }
+ ],
+ "assert": [
+  {
+   "probe": "starter_row",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": "fc0004000201",
+   "why": "DISCRIMINATOR 1. The whole starter table, exact bytes: TREECKO(252) CHARMANDER(4) MUDKIP(258). On the stock ROM this reads fc00ff000201 and FAILS."
+  },
+  {
+   "probe": "starter_mid",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 4,
+   "why": "DISCRIMINATOR 2, the same fact isolated to one element so the failure message names the changed slot rather than a hex blob. SPECIES_CHARMANDER = 4 (include/constants/species.h:8). Stock reads 255 and FAILS."
+  },
+  {
+   "probe": "starter_mid",
+   "check": "constant",
+   "why": "SUPPORTING ONLY -- never load-bearing. Doc 55 \u00a79.4: a constant check survives an address shift, because unrelated garbage is unchanging too. It is here to show the value is stable ROM data across the whole run, not to prove anything about which value it is."
+  },
+  {
+   "probe": "starter_first",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 252,
+   "why": "CONTROL. Must PASS on BOTH builds. Its survival on the stock ROM is what proves the spec discriminates the edited byte specifically."
+  },
+  {
+   "probe": "starter_last",
+   "check": "compare",
+   "at": "all",
+   "op": "==",
+   "value": 258,
+   "why": "CONTROL, other side. Must PASS on BOTH builds."
+  },
+  {
+   "probe": "starter_row",
+   "check": "always_valid",
+   "why": "Every sample of the table was readable. A ROM read that came back unreadable would mean the symbol resolved outside the cartridge window."
+  },
+  {
+   "probe": "starter_mid",
+   "check": "sample_count",
+   "op": ">=",
+   "value": 4,
+   "why": "The table was re-read many times across the run, not once at a lucky moment."
+  },
+  {
+   "probe": "vblank",
+   "check": "strictly_increases",
+   "why": "The engine was alive and advancing for the whole run. Without this the spec would be a file hexdump with extra steps."
+  },
+  {
+   "probe": "callback2",
+   "check": "resolves",
+   "at": "all",
+   "allow_zero": true,
+   "why": "Every non-null callback resolves in THIS build's own .sym. Zero at frame 1 is legitimate: the engine has not installed a callback yet."
+  },
+  {
+   "probe": "callback2",
+   "check": "symbol_sequence",
+   "op": "contains_in_order",
+   "value": [
+    "CB2_InitCopyrightScreenAfterBootup",
+    "CB2_ExpansionIntro",
+    "MainCB2_Intro"
+   ],
+   "why": "The hack still boots through the same three screens doc 54 \u00a73 recorded for the stock build. This is the assertion that keeps 'the harness detected a difference' from being confused with 'the hack is broken': everything except the edited byte is asserted to be unchanged."
+  }
+ ]
+}
