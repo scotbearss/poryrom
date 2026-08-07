@@ -73,6 +73,8 @@ The **offset** is fixed at `chunkNum * 3968`. The **size** is derived from `size
 
 Exceeding a ceiling is a **compile** error (`STATIC_ASSERT`, `src/save.c:80-83`) — you cannot ship an over-size saveblock. Everything *under* the ceiling silently changes the on-flash format.
 
+**And the arithmetic that fills a ceiling can be right on the host and wrong about the machine.** This toolchain builds with `-mabi=apcs-gnu`, whose default `-mstructure-size-boundary=32` rounds every struct's **size** — not merely its alignment — up to a multiple of 4. A 6-byte save row with every field naturally aligned (`u16 u16 u8 u8`) silently becomes an **8-byte array stride**, and 240 rows budgeted at 1,444 B by host-side `sizeof` arithmetic link at 1,924 — over the ceiling (record 60 §2). The fix is `__attribute__((packed))` (already idiomatic in this codebase) **plus your own `STATIC_ASSERT(sizeof(struct X) == N)`** on both the row and the container, so the stride can never drift silently again. When an assert fires and you need the number, make the compiler print it: `char (*probe)[sizeof(struct X)] = 1;` fails with `initialization of 'char (*)[1924]'` — faster than bisecting asserts, and worth keeping (record 60 §2). More toolchain surprises of this shape in [[build-system]].
+
 ### 2.2 `SaveBlock3` — 1,624 B with no integrity check
 
 Vanilla's sector was `data[3968]` + **116 unused bytes** + footer. Expansion repurposed exactly those bytes, which is why `SaveBlock3` is save-compatible with vanilla. It is striped: logical sector *i* carries bytes `[i*116, (i+1)*116)`.
@@ -320,4 +322,4 @@ More on all of this in [[verification-discipline]].
 
 **Related:** [[walls-and-budgets]] · [[verification-discipline]] · [[engine-defects]] · [[battle-engine]] · [[build-system]] · [[maps-and-tilesets]]
 
-**Records distilled here:** 41 (the save system, source-verified), 73 (the layout change, built in three arms), 79 (the box arena and the `currentBox` range hazard), 69 (item-id renumbering), 78 (the battle-start re-roll, asserted on the key), 44 §6.3 (the ASLR wrapper set), 54 and 67 (the free-space figures).
+**Records distilled here:** 41 (the save system, source-verified), 73 (the layout change, built in three arms), 79 (the box arena and the `currentBox` range hazard), 69 (item-id renumbering), 78 (the battle-start re-roll, asserted on the key), 44 §6.3 (the ASLR wrapper set), 54 and 67 (the free-space figures), 60 §2 (the struct-size rounding trap).

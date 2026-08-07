@@ -82,6 +82,51 @@ hedged rule. Without the baseline the rule would have had to be softened into us
 the rule stays absolute and the exceptions become data. Same move as `check_map.py`'s 138 suppressed
 vanilla quirks — see [[maps-and-tilesets]].*
 
+### 2.2 The width mechanism, and budgeting a placeholder in pixels
+
+The corpus numbers in §2 are what was *authored*; this is what the engine *enforces*, and the two
+differ by exactly one down-arrow. The machinery itself is on [[text-engine]] — what matters here is
+the arithmetic an author writes against.
+
+**The engine clips at 216 px and says nothing.** The field box is 27 tiles wide (216 px); the blit is
+clamped per glyph at the window edge, so an over-wide line has its boundary glyph sliced mid-stroke
+and everything after it vanishes — no wrap, no error, just text that stops (record 45 §4.2, §4.6).
+
+**The authoring budget is 208 px, not 216.** The wait-for-button arrow is drawn immediately after the
+last glyph of any line followed by `\l` or `\p` and claims 8 px, so 216 minus the arrow is 208 — and
+208 px is where the vanilla corpus's own hard cliff sits: 27 lines at exactly 208 px, zero above
+(record 45 §5.3, §5.4). **The battle box is a different budget**: 26 tiles = 208 px of *window*, one
+tile narrower than the field box, so a line that fits the field box to the pixel can clip in battle
+(record 45 §4.2).
+
+**Any line containing `{STR_VAR_n}` is budgeted at the type's pin maximum, never at the sample value
+tested.** The name-length constants at this pin, at the 6 px worst case (record 45 §3.3):
+
+| Placeholder source | Max chars | Max px (FONT_NORMAL) |
+|---|---|---|
+| item name | 20 | **120** |
+| move name | 16 | 96 |
+| ability name | 16 | 96 |
+| species / nickname | 12 | 72 |
+| trainer name | 10 | 60 |
+| `{PLAYER}` | 7 | 42 |
+
+A single item name can eat 120 of the line's 208 px — 58 % of the budget — which is why "it fit when
+I tested it with POTION" is not a test.
+
+**The complete FONT_NORMAL width rule**, which reproduces the engine's own measurement exactly for
+ordinary English prose (record 45 §5.6, and the exhaustive bucket table it is derived from):
+
+> **Every letter and digit is 6 px except six of them:** `i` `l` are 4, `j` `r` are 5, `Œ` `œ` are 8.
+> Punctuation: `space . , : ; · ' ‘ ’` are 3; `! ¡ ( )` are 4; `? - … “ ” / ♂ ♀ ¥ %` are 6; `& ×`
+> are 7; `= ▶` are 8; the `LV` ligature is 10 and `PK`/`MN` are 8 each.
+
+That rule is what makes §1's "how many characters fit has no answer" workable anyway: don't count
+characters, sum this rule — 208 px is 34 characters of `ALL CAPS OR DIGITS` and 41 of ordinary
+sentence case (record 45 §5.6). It is also the spec `check_dialogue.py`'s width check implements,
+except the tool reads the widths out of the pin's own font tables at run time rather than trusting
+this prose (§4).
+
 ---
 
 ## 3. The rules
@@ -198,5 +243,5 @@ Two corollaries worth keeping:
 
 ---
 
-**Related:** [[verification-discipline]] · [[art-pipeline]] · [[maps-and-tilesets]] ·
+**Related:** [[text-engine]] · [[verification-discipline]] · [[art-pipeline]] · [[maps-and-tilesets]] ·
 [[walls-and-budgets]] · [[build-system]]

@@ -270,6 +270,12 @@ Four quiet behaviours worth knowing (record 44):
   does not rebuild `preproc`**, so a hack that renumbers a control character silently keeps using the
   old value until someone runs `make clean-tools`.
 
+**And one macro gotcha in the same family:** `MAP_GROUP(x)` **token-pastes its argument** onto
+`MAP_`, so a configurable start map cannot arrive as a `#define` — the paste happens before the
+define would expand, and the macro glues in the define's *name*, not its value. A generator has to
+substitute the literal map name into the source. Cost one build to learn (record
+studio-rom-progress-view, findings). See [[maps-and-tilesets]].
+
 **Two ways a successful build dirties the tree**, both of which break a naive
 `git status --porcelain` clean-tree gate: `KEEP_TEMPS=1` writes `.i`/`.s` temps to the **repo root**
 (and there is no `*.s` gitignore rule), and **three build-generated headers are tracked in git anyway**

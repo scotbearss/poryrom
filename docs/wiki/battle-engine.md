@@ -3,9 +3,12 @@
 **What this page is for.** The battle subsystem as it actually is at this pin: the script VM and its
 eight-slot call stack (walked off on purpose and measured), how a move is defined and what it costs to
 add one, the save-block pointer re-roll that fires at every battle start and what it does to a probe
-that caches an address, and the trainer AI's flags, scoring model and exactly where it cheats. Read it
-before adding a move, an ability, or anything that runs in battle. Nearly every wall in here is
-**silent**, and one of them erases the evidence of its own overflow.
+that caches an address, the trainer AI's flags, scoring model and exactly where it cheats — and the
+exact-value maths: the damage pipeline and its three rounding regimes, the EXP defaults (Gen 9, not
+Emerald), the level-cap subsystem, and the catch formula, all re-derived line-by-line from the pin
+(record 48). Read it before adding a move, an ability, or anything that runs in battle, and before
+tuning any number a player feels. Nearly every wall in here is **silent**, and one of them erases the
+evidence of its own overflow.
 
 Naming, because three plausible symbol names are wrong at this pin: it is **`gMovesInfo`** (not
 `gBattleMoves`), **`gBattleScriptingCommandsTable`** (plural), and there is **no
@@ -374,7 +377,166 @@ grey: their switch-in evaluation peeks at unrevealed moves. Accuracy and crits h
 side-dependent branch anywhere** — record 43 found no forced-miss or guaranteed-crit mechanism
 favouring the AI.
 
-## 8. Still unverified
+## 8. Damage maths: the exact pipeline, and the three rounding regimes
+
+**The modifier order at the pin** (record 48 §1.5), after the base-damage kernel and before the
+final floor:
+
+> targets → Parental Bond → weather → **crit ×1.5** → Glaive Rush → **random roll** → STAB/Tera →
+> type effectiveness → burn → Z/Max-vs-protect → other modifiers
+
+**The random roll comes BEFORE STAB and type effectiveness**, not after them the way every wiki
+rendering writes it. This is not pedantry: a 4,800-case sweep (base damage 1…300 × all 16 rolls,
+evaluated with the pin's exact primitives) showed the naive roll-last order **diverges from the pin
+in 70.6 % of cases, by −1 to +3 points** (record 48 §1.6). Small per hit, and precisely the layer a
+difficulty hack tunes — a ±1 at a 2HKO boundary flips the boundary. Crit is ×1.5 at the pin's
+defaults, not Gen 3's ×2 (record 48 §0.2 D7).
+
+**Three different rounding regimes coexist in the same calculation** (record 48 §1.3–1.4, §2.4):
+
+| Where | Rule |
+|---|---|
+| every top-level modifier step | Q4.12, **round half DOWN** to an integer, re-rounded per step |
+| the random roll | `dmg *= r; dmg /= 100` — **plain truncation**, not a Q4.12 modifier at all |
+| the type-effectiveness product | Q4.12, **round half UP** |
+
+Q4.12 also means the multipliers themselves are not exact: **"×1.1" is really 4505/4096** =
+1.09985…, which is a real source of "the wiki says 1.3× but the game gives me one less HP"
+(record 48 §1.3). Because every step re-rounds, the chain is **not associative** — the source
+comments say so itself — and the "other modifiers" bucket is applied in **Speed order** (attacker's
+abilities and items first only if its unmodified Speed ≥ the defender's), so **the same board state
+can produce different damage depending on nothing but a Speed comparison** (record 48 §1.5).
+Immunities are a **true zero** — the calc returns 0 before the pipeline ever runs; everything else
+floors at 1 (record 48 §1.5).
+
+### What a turn-exact simulation must reproduce — the eleven-point checklist
+
+Record 48 §9 is the specification for any sim that claims to match the ROM. Verbatim in substance:
+
+1. **Two rounding modes** — half-down for the damage chain, half-up for type accumulation. One
+   helper for both diverges (record 48 §1.3, §2.4).
+2. **Q4.12 quantization of the multipliers themselves** — 1.1 is 4505/4096, 1.3 is 5324/4096.
+   Floating point will not reproduce the ROM (record 48 §1.3).
+3. **Plain truncation, not half-down, for the random roll** (record 48 §1.4).
+4. **The exact modifier order**, including the Speed-comparison branch that reorders ability/item
+   application inside the other-modifiers bucket (record 48 §1.5).
+5. **Two truncations inside the base-damage kernel, in the pin's order** — the doc-style formula is
+   grouping-ambiguous; the pin is not (record 48 §1.1).
+6. **The integer catch path, not `P = a/255`** — truncation biases the real probability upward by
+   about 2 points at a = 45 (§11 below; record 48 §3.6).
+7. **The scaled-EXP table, not `(2L+10)^2.5`** — the ratio is taken between two truncated table
+   entries, plus the trailing `+1` (§9 below; record 48 §4.4).
+8. **`u64` for the scaled-EXP multiply** — the source says why (record 48 §4.4).
+9. **Nature applied to an already-truncated stat, truncating again** (record 48 §6.2).
+10. **`ev/4` truncated before the level multiply** (record 48 §6.1).
+11. **The hidden-nature XOR for minted mons** — the PID alone is not enough (record 48 §6.1).
+
+The harness-facing corollary record 48 draws: every one of these is checkable from a `.sym` read of
+the damage and HP globals at a known script step, with no screenshot — see
+[[verification-discipline]].
+
+## 9. EXP: the expansion's defaults are Gen 9, not Emerald
+
+**A level curve modeled on vanilla Emerald is wrong out of the box.** Every EXP-shaping switch in
+the config block defaults to `GEN_LATEST`, and the resulting behaviour is Gen 9's, not Gen 3's
+(record 48 §4.4–4.6):
+
+| Lever | State at the pin | Consequence |
+|---|---|---|
+| `B_SCALED_EXP` | **already ON** | the level-difference brake is live. `sExperienceScalingFactors[k] = floor(k^2.5 / 4)` — verified against the closed form over **all 211 entries, zero mismatches** (record 48 §4.4) |
+| base divisor | **/5, not /7** | every award is 40 % larger than the Gen-3 formula predicts |
+| trainer ×1.5 | **OFF** | no trainer-battle bonus at all |
+| `B_SPLIT_EXP` | **full EXP to every participant** | no division by participant count — **a party of 4 earns 4× what a Gen-3 sharing model predicts**, enough to invalidate any per-badge level table derived from that model (record 48 §4.4) |
+| `B_EXP_CATCH` | **ON** | catching is an EXP event; a catching-heavy playthrough levels faster than a battling-only one (record 48 §4.5) |
+| unevolved bonus | **ON**, ×4915/4096 | **1.19995…, not 1.2** — truncating integer math (record 48 §4.4) |
+| badge stat boosts | **OFF** | dead code unless `B_BADGE_BOOST GEN_3` (record 48 §0.1) |
+| crit ×2 | **OFF** | crit is ×1.5 (§8) |
+
+**The meta-lesson, which record 48 found to be the most recurring error class in the corpus:
+"true of vanilla, false of the expansion."** The source doc it audited had even written its own
+caveat — *verify against the pinned version* — and then not executed it; three of its highest-impact
+claims were exactly the failure the caveat names. **A caveat is not a verification** (record 48
+§7.5). When a number about this engine arrives dressed as an Emerald fact, the default assumption is
+that the expansion changed it.
+
+## 10. The level-cap subsystem
+
+The out-of-bounds read at exactly 5 levels from the cap is **E1** and [[engine-defects]] owns it —
+fix `>` → `>=` before enabling any capping. What follows is the subsystem around it (record 48
+§5.1–5.6).
+
+- **`B_LEVEL_CAP_TYPE` alone — one define — already gives a hard level cap.** `TryIncrementMonLevel`
+  checks the cap unconditionally, so EXP keeps accruing while levels stop: **EXP banks, and is spent
+  instantly the moment the cap rises** (record 48 §5.1).
+- **EXP capping needs two defines, and misconfiguring them is a compile `#error`**, not a silent
+  wrong behaviour — `B_EXP_CAP_TYPE` cannot be set without a real `B_LEVEL_CAP_TYPE`. Unusually good
+  hygiene for this codebase, and worth copying (record 48 §5.1).
+- **The soft cap divides by 4 AT the cap** (`d = 0`), not only above it — "soft" bites the moment
+  you arrive, then ÷8, ÷16, ÷32, ÷64 as you climb (record 48 §5.3).
+- **`B_LEVEL_CAP_EXP_UP` is a catch-up ladder** for mons under the cap: +1/8 at one level below,
+  +1/4, +1/2, then double at four or more below (record 48 §5.4).
+- **`LEVEL_CAP_VARIABLE` reads the cap from an event variable**, so scripts can set it — the
+  mechanism a difficulty hack that decouples caps from badges would use, and it is shipped
+  (record 48 §5.2).
+- **The cap binds the PLAYER ONLY.** The exhaustive call graph — nine references at seven distinct
+  sites across four files — contains no opponent-side path; **nothing clamps trainer parties**, and
+  a trainer written above the cap fights at the written level. Resolved statically, no build needed
+  (record 48 §5.6).
+- **Rare-Candy gating is half-implemented**: the party-menu callback blocks Rare Candy and EXP
+  Candies at the cap, but the item-effect clamp underneath covers **EXP Candies only**, requires
+  `EXP_CAP_HARD`, and does not reach a Rare Candy that arrives by any other route (record 48 §5.6).
+- **The vanilla cap table `15/19/24/29/31/33/42/46/58` is tuned to vanilla Emerald's actual gym
+  order** — the increments are +4, +5, +5, +2, +2, +9, +4, +12, mirroring the real gym-leader
+  levels. **A hack that reorders gyms must retune it**; it binds from zero badges (record 48 §5.2).
+
+## 11. The catch formula
+
+**The quadruple-square-root shake machinery computes exactly `P = a/255` and nothing else** — the
+four roots exist purely to manufacture the four-wobble feedback channel, not to shape the
+probability. In integer arithmetic the truncating BIOS `Sqrt` biases the real probability **upward
+by about 2 points at a = 45** — so a turn-exact sim must reproduce the integer path, not the closed
+form (record 48 §3.6).
+
+- **Truncation quantizes the low rates, where players care most.** At catch rate 3 the theoretical
+  3× full-HP→1-HP incentive is destroyed by integer division: **the real ratio is 2×, not 3×** (at
+  rate 45 it is 2.93×, essentially intact). **The HP term's payoff collapses precisely where the
+  player needs it** — weakening a legendary buys far less than the formula promises (record 48
+  §3.2).
+- **The ball multiplier is a 19-case `switch` in units of percent**, not a three-entry table —
+  Net 350, Dusk 300, Quick 500, Level and Love up to 800, Beast 10 on a non-Ultra-Beast. **Heavy
+  Ball is the odd one out: ADDITIVE to the catch rate** (−20…+30), not multiplicative — a genuinely
+  different lever that helps low-rate targets proportionally far more (record 48 §3.3).
+- **`odds > 254` is an unconditional catch with no roll** — the pin does have a guaranteed catch,
+  reachable whenever rate × ball × HP × status clears 255 (record 48 §3.5).
+- **Critical capture is ON by default** and scales with dex completion expressed as **fractions of
+  `NATIONAL_DEX_COUNT`**, not literal Gen-5 thresholds — **it auto-scales to a hack's own dex
+  size**. A crit capture runs one shake check instead of four; a large boost, explicitly not a
+  guarantee (record 48 §3.5).
+- **Species catch rates are a ~15-value palette, not a smooth distribution** — 45 alone covers 32 %
+  of all species, with 3 the legendary floor and 255 the route-common ceiling. Game Freak assigns
+  from tiers rather than tuning per species (record 48 §3.7).
+
+## 12. Config-flag corrections
+
+Three flags that community lore names or defaults wrongly, verified at the pin (record 48 §7.2–7.3):
+
+- **`B_VAR_NO_BAG_USE` does not exist.** Zero hits tree-wide. The real lever is
+  **`B_FLAG_NO_BAG_USE`** — a single flag, no 1-vs-2 tiering, and the one battle-logic read has no
+  wild/trainer discrimination: set, it kills the bag in every battle. Scoping it to bosses is
+  something the hack scripts around each battle, not something the config provides.
+- **The unsung lever next to it: `B_FLAG_NO_CATCHING`** — a one-flag "no balls in this battle,"
+  which gates catching by area or story beat for free. A bigger design lever for a collector hack
+  than the bag flag, and the source doc record 48 audited missed it entirely.
+- **The hazard in the whole `B_FLAG_*` block: the defaults are literal `0`, and `FlagGet(0)` is a
+  REAL read of temp flag 0.** These features are **not compiled out** when unassigned — they read a
+  temp flag that happens to be cleared on every map load. **A hack that repurposes low temp flags
+  gets mysterious battle behaviour** with no error anywhere.
+- **`I_REUSABLE_TMS` defaults `FALSE`**, and it is a plain boolean — there is no "modern default" to
+  appeal to. The finer shipped mechanism: **any individual TM becomes reusable by setting its item
+  `importance` to 1**, which gives per-item reusable-but-unbuyable control the blanket toggle
+  cannot.
+
+## 13. Still unverified
 
 - **The stack overflow's downstream consequence.** The write past `ptr[7]` is measured; what it
   corrupts on the heap, and whether any unwind pattern surfaces it, is not.

@@ -270,7 +270,7 @@ non-zero samples, peak 13056. **The check is now executable**: `verify_hack.py` 
 amplitude on every capture and refuses a run that asked for sound and got silence, with
 `"audio_expect_silence"` as the opt-out.
 
-**Captures are gitignored** (`docs/wiki/assets/*-audio/*.wav`, `*.pcm`, `*.pcm.rate`). A `.wav` off a
+**Captures are gitignored** (`docs/assets/*-audio/*.wav`, `*.pcm`, `*.pcm.rate`). A `.wav` off a
 vanilla-music run is Game Freak's composition verbatim — a boundary rule, not a size one.
 
 ## 6. Instrumenting the sound subsystem

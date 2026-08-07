@@ -115,6 +115,30 @@ field made it the migration source *and* kept the whole round a pure addition wi
 change anywhere. Those bytes were not contended by anything (record 79). **The tidiest prediction
 is often the one to abandon.**
 
+## Choosing a base is two decisions, and design lessons cross both
+
+**Engine choice is two independent axes: the game base (Emerald vs FireRed) AND the methodology
+(decomp fork vs binary patch).** The famous FireRed hacks differ from a decomp project on *both*
+axes, so their implementation techniques transfer to no decomp work — even a hypothetical FireRed
+decomp would close only the first axis (record 53 §2). But design lessons are base-independent:
+**never discard a design citation because its exemplar turned out to be binary-lane.** The lineage
+split invalidates "here is how they built it"; it does not invalidate "here is what they built and
+how players received it" (record 53 §3). And do not read the exemplars' similarity to each other as
+convergent design — it is shared substrate, one common engine layer under both (record 53). The
+default stands: **one base deeply understood beats two understood shallowly** (record 53 §5).
+
+## A failure that stops reproducing when serialized is not thereby explained
+
+**Under macOS Docker file sharing, a container started milliseconds after the host mutates a
+mounted directory can transiently see that directory as missing.** Three runs died with a stable
+signature; the first two coincided with concurrent harness runs, and "concurrency corrupts the
+shared scratch" fit perfectly — then the third death happened in a fully serial queue and the
+theory died on the data point. The hardening is an in-container `mkdir -p` on the mounted path,
+forcing in-container resolution — a no-op when the mount is fresh (record 63). The transferable
+half is the diagnostic rule: serializing made the failure rarer, not *explained*. A coincidence
+with concurrency is a hypothesis, and it owes you a mechanism before it becomes a fix. See
+[[verification-discipline]] for the harness-side twin of this rule.
+
 ## Things that are only true because someone checked
 
 - **A design doc's derived numbers rot; its decisions do not.** Recompute anything derived at
