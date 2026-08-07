@@ -43,7 +43,12 @@ them to look at. Every state you touched, plus the ones beside it.
 **5 — Refresh the backup.** `export_hack.py <game>` after a green build. The working copy is not
 in version control; until this runs, the change exists on exactly one disk.
 
-**6 — Put the ROM where they can reach it.** Copy the built ROM to the game repo root as
+**6 — Regenerate the dex site.** `python3 "$PORYROM/tools/make_dex.py"` after a green build.
+The site at `<game>/dex/` is the user's progress tracker — every new and changed species, derived
+from the same source the build compiled, so it can never disagree with the ROM. It is gitignored
+(it contains sprites); it regenerates in seconds, so never skip it to save time.
+
+**7 — Put the ROM where they can reach it.** Copy the built ROM to the game repo root as
 `<game>.gba`, replacing what is there. That is the file they pick up to test — it must be at the
 top of their project, named after their game, and never stale.
 
