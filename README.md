@@ -2,10 +2,11 @@
 
 **Make your own Pokémon game by talking about it.**
 
-poryrom turns Claude into the ROM-hacking expert you always wished you had. You describe your
-game in plain English — *"I want a region based on the Pacific Northwest"*, *"make the third
-gym leader use only fossil Pokémon"* — and it does the rest: writes the code, builds the game,
-tests that your change actually works, and shows you screenshots before you even boot it up.
+poryrom turns your AI coding agent into the ROM-hacking expert you always wished you had. You
+describe your game in plain English — *"I want a region based on the Pacific Northwest"*, *"make
+the third gym leader use only fossil Pokémon"* — and it does the rest: writes the code, builds
+the game, tests that your change actually works, and shows you screenshots before you even boot
+it up.
 
 It builds hacks of **Pokémon Emerald**, using
 [pokeemerald-expansion](https://github.com/rh-hideout/pokeemerald-expansion) — the community
@@ -19,11 +20,11 @@ generations. You don't need to know what any of that means to use this.
 ```mermaid
 flowchart LR
     you["🗣️ You say what you want<br/><i>'give the rival a Squirtle'</i>"]
-    claude["🤖 Claude makes the change<br/>and builds the game"]
+    agent["🤖 Your agent makes the change<br/>and builds the game"]
     prove["🔍 It tests the change<br/>and shows you screenshots"]
     play["🎮 You play it"]
 
-    you --> claude --> prove --> play
+    you --> agent --> prove --> play
     play -.->|"'cool, now make<br/>the gym harder'"| you
 ```
 
@@ -43,11 +44,12 @@ just asking an AI to write game code:
 
 ## Getting started
 
-You need three things: [Claude Code](https://claude.com/claude-code) (the app this plugs into),
-[Docker Desktop](https://www.docker.com/products/docker-desktop/) (the game compiles inside it
-— install it, start it, forget it), and about 2 GB of free disk space.
+You need three things: an AI coding agent that supports the
+[Agent Skills](https://agentskills.io) standard — [Claude Code](https://claude.com/claude-code),
+Codex CLI, Gemini CLI, and others all work — [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(the game compiles inside it — install it, start it, forget it), and about 2 GB of free disk space.
 
-1. **Install the plugin** in Claude Code.
+1. **Install the plugin** in your agent.
 2. **Say "check my setup."** It will tell you exactly what's missing and give you the one
    command that fixes each thing. There's a one-time download of the game engine (about 1 GB).
 3. **Say "start a new game" and describe your idea.** You'll get your own project folder and a

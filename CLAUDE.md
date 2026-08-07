@@ -6,9 +6,10 @@ file gets a pointer.
 
 ## What this is
 
-An expert Game Boy Advance ROM-hacking workbench, installed as a Claude Code plugin. It
-scaffolds a game into its own repo, builds it in Docker, verifies it in a headless emulator by
-reading the game's own memory, puts screenshots in front of the user, and deploys to a handheld.
+An expert Game Boy Advance ROM-hacking workbench, installed as an agent plugin (Claude Code,
+Codex CLI, and other tools that support the Agent Skills standard). It scaffolds a game into its
+own repo, builds it in Docker, verifies it in a headless emulator by reading the game's own
+memory, puts screenshots in front of the user, and deploys to a handheld.
 
 **It is a tool, not a game.** Games live in their own repos beside it, each with a
 `harness.json` that pins which version of this harness it was built against.
