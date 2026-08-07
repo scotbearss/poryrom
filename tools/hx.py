@@ -28,10 +28,10 @@ game repos, and the tools must never write into their own installation.
 harness.json (in a game repo's root) looks like:
 
     {"game": "reps",
-     "harness": {"plugin": "rombench", "version": "1.0.0"},
+     "harness": {"plugin": "poryrom", "version": "1.0.0"},
      "engine": {"ref": "expansion/1.9.4", "commit": "2e656274",
-                "cache": "~/.rombench/engines/expansion-1.9.4"},
-     "docker_image": "rombench-build:1"}
+                "cache": "~/.poryrom/engines/expansion-1.9.4"},
+     "docker_image": "poryrom-build:1"}
 
 Every field is optional; the defaults below reproduce the layout this harness
 had before it moved, so nothing changes until a game repo asks it to.
@@ -51,7 +51,7 @@ HARNESS_ROOT = Path(__file__).resolve().parents[1]
 # docker/Dockerfile IN THIS REPO, and it is not a stock mGBA: it carries the
 # video-buffer fix, the mCoreAutoloadSave gate and the mAVStream audio tap that
 # three separate rounds of this project had to add. See PROVENANCE.md.
-DEFAULT_IMAGE = "rombench-build:1"
+DEFAULT_IMAGE = "poryrom-build:1"
 
 # The engine pin. A game repo overrides this in harness.json; the value here is
 # what `reps` was built against and what every doc from 34 up cites.
@@ -90,7 +90,7 @@ ENGINE_REF_SLUG = (CONFIG.get("engine") or {}).get(
     "ref", DEFAULT_ENGINE_REF).replace("/", "-")
 
 
-DEFAULT_CACHE_ROOT = Path(os.path.expanduser("~/.rombench/engines"))
+DEFAULT_CACHE_ROOT = Path(os.path.expanduser("~/.poryrom/engines"))
 
 
 def _engine_path() -> Path:

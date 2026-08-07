@@ -32,7 +32,7 @@ The `CPP=` is required, and `make syms` is a **separate target** — the symbol 
 later check reads addresses from, and a build without it leaves a stale one behind that will
 resolve probes against the wrong build.
 
-**3 — Verify.** `python3 "$ROMBENCH/tools/verify_hack.py" <spec>`. Each spec names the ROM it
+**3 — Verify.** `python3 "$PORYROM/tools/verify_hack.py" <spec>`. Each spec names the ROM it
 needs, so you do not pass one. Specs that resume from a saved state need that state to exist —
 if it does not, say so rather than reporting a pass.
 

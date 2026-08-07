@@ -20,7 +20,7 @@ python3 tools/new_hack.py reps          # fresh fork of the pin at expansion/1.9
 cd hacks/reps
 patch -p1 < ../../patches/reps.patch
 (cd ../../patches/assets/reps && tar cf - .) | tar xf -   # the binary sources; see below
-docker run --rm -v "$PWD:/hack" -w /hack rombench-build:1 bash -c \
+docker run --rm -v "$PWD:/hack" -w /hack poryrom-build:1 bash -c \
   'export PATH=/opt/devkitpro/devkitARM/bin:$PATH; make -j"$(nproc)" CPP="arm-none-eabi-cpp -std=gnu17" && make syms CPP="arm-none-eabi-cpp -std=gnu17"'
 ```
 

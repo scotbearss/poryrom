@@ -18,7 +18,7 @@
 # Build:
 #   docker build --platform linux/arm64 -f pokemon/docker/Dockerfile.romtest \
 #     -t pokemon-romtest:latest pokemon/docker
-FROM rombench-build:1
+FROM poryrom-build:1
 
 ARG MGBA_ROM_TEST_COMMIT=dbffb46c4e7d2e7a2cbed7c3488cece4c2176d4c
 

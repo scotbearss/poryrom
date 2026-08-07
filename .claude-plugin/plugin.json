@@ -1,5 +1,5 @@
 {
-  "name": "rombench",
+  "name": "poryrom",
   "version": "0.9.0",
   "description": "An expert Game Boy Advance ROM-hacking workbench: scaffolds a game repo, builds it, verifies it in a headless emulator, and talks to you in plain English.",
   "author": {

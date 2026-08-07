@@ -1,4 +1,4 @@
-# rombench
+# poryrom
 
 An expert Game Boy Advance ROM-hacking workbench, installed as a Claude Code plugin.
 

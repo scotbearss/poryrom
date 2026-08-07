@@ -68,20 +68,20 @@ def main() -> int:
     (root / "harness.json").write_text(json.dumps({
         "game": args.name,
         "title": title,
-        "harness": {"plugin": "rombench",
+        "harness": {"plugin": "poryrom",
                     "version": _harness_version()},
         "engine": {"repo": "rh-hideout/pokeemerald-expansion",
                    "ref": hx.ENGINE_REF,
-                   "cache": f"~/.rombench/engines/{hx.ENGINE_REF_SLUG}"},
+                   "cache": f"~/.poryrom/engines/{hx.ENGINE_REF_SLUG}"},
         "docker_image": hx.IMAGE,
     }, indent=1) + "\n")
 
     # ---- so opening this repo offers to install the harness -----------------
     (root / ".claude" / "settings.json").write_text(json.dumps({
         "extraKnownMarketplaces": {
-            "rombench": {"source": {"source": "github",
-                                        "repo": "scotbearss/rombench"}}},
-        "enabledPlugins": {"rombench@rombench": True},
+            "poryrom": {"source": {"source": "github",
+                                        "repo": "scotbearss/poryrom"}}},
+        "enabledPlugins": {"poryrom@poryrom": True},
     }, indent=1) + "\n")
 
     gitignore = (hx.HARNESS_ROOT / ".gitignore")
@@ -106,7 +106,7 @@ def main() -> int:
     print(f"==> {root}")
     print(f"    game   {args.name}")
     print(f"    title  {title}")
-    print(f"    engine {hx.ENGINE_REF}  (cache: ~/.rombench/engines/"
+    print(f"    engine {hx.ENGINE_REF}  (cache: ~/.poryrom/engines/"
           f"{hx.ENGINE_REF_SLUG})")
     print(f"    image  {hx.IMAGE}")
     print()
@@ -125,13 +125,13 @@ def _harness_version() -> str:
 def _readme(name: str, title: str) -> str:
     return f"""# {name}
 
-A Game Boy Advance game, built with **rombench**.
+A Game Boy Advance game, built with **poryrom**.
 
 ## What this repo is
 
 The **source of this game** — its design, its checks, and a patch that is the only
 tracked copy of its code. It is not the game engine and it is not the tools; those
-come from the rombench harness, which is installed once and shared by every game.
+come from the poryrom harness, which is installed once and shared by every game.
 
 **There is no commercial ROM anywhere in this.** The game is compiled from
 `pokeemerald-expansion`, a public source project on GitHub. Nothing here was
@@ -168,7 +168,7 @@ you would expect. That is why the tools refresh the patch after every good build
 def _claude_md(name: str, title: str) -> str:
     return f"""# {name} — game repo
 
-**The harness is the `rombench` plugin.** Its skills carry the working rules;
+**The harness is the `poryrom` plugin.** Its skills carry the working rules;
 do not restate them here. Start a session with the `session-start` skill.
 
 ## What this is

@@ -1,6 +1,6 @@
 ---
 name: new-game
-description: Start a brand-new GBA ROM hack — create its own repo beside the harness, fork the pinned engine, wire up the pin file and design doc, and build a first playable ROM. Use when the user says "start a new game", "new hack", "I want to make a game about...", or asks to set up a new project with rombench.
+description: Start a brand-new GBA ROM hack — create its own repo beside the harness, fork the pinned engine, wire up the pin file and design doc, and build a first playable ROM. Use when the user says "start a new game", "new hack", "I want to make a game about...", or asks to set up a new project with poryrom.
 ---
 
 # New game
@@ -10,7 +10,7 @@ whole session should read as an expert setting things up, not as a build log.
 
 ## Before anything
 
-Run `python3 "$ROMBENCH/tools/doctor.py"`. If a blocking check fails, fix that first and say
+Run `python3 "$PORYROM/tools/doctor.py"`. If a blocking check fails, fix that first and say
 so in one sentence. Do not start a game on a machine that cannot build one.
 
 Ask them two things, in plain language, and nothing else:

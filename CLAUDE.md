@@ -1,4 +1,4 @@
-# rombench — the harness
+# poryrom — the harness
 
 **This file is a MAP, not a manual.** Working rules live in skills, knowledge lives in
 `docs/wiki/`. If something here needs more than a sentence or two, it belongs there and this
@@ -38,7 +38,7 @@ reply** — this rule must never make a document vaguer.
 - **The harness** — where the tools live. Correct even when running from a read-only plugin cache.
 - **The workspace** — the game repo, found by walking up from the current directory for
   `harness.json`, the way git finds `.git`.
-- **The engine cache** — `~/.rombench/engines/<ref>`, a pinned clone shared by every game and
+- **The engine cache** — `~/.poryrom/engines/<ref>`, a pinned clone shared by every game and
   living outside all repos.
 
 `python3 tools/hx.py` prints all three. **Nothing that must not be redistributed may live inside

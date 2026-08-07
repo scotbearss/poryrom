@@ -1,14 +1,14 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "rombench",
+  "name": "poryrom",
   "version": "0.9.0",
   "description": "An expert Game Boy Advance ROM-hacking workbench: scaffolds a game repo, builds it in Docker, verifies it in a headless emulator by reading the game's own memory, and talks to you in plain English.",
   "author": {
     "name": "scotbearss",
     "url": "https://github.com/scotbearss"
   },
-  "homepage": "https://github.com/scotbearss/rombench",
-  "repository": "https://github.com/scotbearss/rombench",
+  "homepage": "https://github.com/scotbearss/poryrom",
+  "repository": "https://github.com/scotbearss/poryrom",
   "license": "MIT",
   "keywords": ["gba", "pokeemerald", "rom-hack", "gamedev", "emulator", "verification"]
 }

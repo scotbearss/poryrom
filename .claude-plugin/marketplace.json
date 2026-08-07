@@ -1,11 +1,11 @@
 {
-  "name": "rombench",
+  "name": "poryrom",
   "owner": {
     "name": "scotbearss"
   },
   "plugins": [
     {
-      "name": "rombench",
+      "name": "poryrom",
       "source": "./",
       "description": "GBA ROM-hacking workbench: scaffold, build, verify, deploy — in plain English.",
       "version": "0.9.0"
