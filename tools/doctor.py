@@ -146,6 +146,9 @@ def main() -> int:
               "re-rolls the starter -- see doc 82 §4.5)")
 
     # ---- soft: the optional roads -------------------------------------------
+    # The art pipeline has a third leg, PixelLab, for rotation/animation frames
+    # -- but it's a manual web session today, not a script, so there's no key
+    # to check for it here. See [[art-pipeline]] "Still open".
     check(False, "OPENAI_API_KEY set", bool(os.environ.get("OPENAI_API_KEY")),
           "for concept art via make_reference.py",
           "export OPENAI_API_KEY in ~/.zshrc (only needed to generate art)")

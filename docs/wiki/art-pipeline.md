@@ -20,6 +20,7 @@ resolution does this asset land at?* Read this before generating a sprite. See
 | …with no suitable base | **`make_pixel.py`** (Retro Diffusion `*_low_res`) | generates from **16 px**; the only generator here that reaches GBA sprite scale |
 | Species / battle art, 64×64 | **`make_reference.py`** (gpt-image-1) → PixelLab | proven by the Legs line; room for the detail both tools produce |
 | Trainer pic, 64×64 | same | ditto |
+| Rotation / animation frames | **PixelLab**, manual web session — no scripted tool, no key | the only leg of the pipeline that is not automated yet |
 | Any big art that must end up small | **`make_pixel.py --fix`** (K-Centroid) | the only downscaler that survives the trip |
 
 This project got that routing wrong three times in a single round (record 75), and **each failure
@@ -271,7 +272,9 @@ Two rules out of it:
   cannot see — there is no wrong *number* in a sprite wearing the wrong colours. See
   [[verification-discipline]].
 - **Retro Diffusion for base sprites, PixelLab for rotation and animation** — the vendor's own
-  head-to-head advice, and it matches what this project measured (record 75).
+  head-to-head advice, and it matches what this project measured (record 75). Retro Diffusion did
+  not replace PixelLab; they split by job, and PixelLab is currently done by hand through their
+  web app rather than a script, so it needs no API key and `doctor.py` has nothing to check for it.
 
 ## Still open
 
@@ -279,3 +282,7 @@ Two rules out of it:
   only on the trainer card and no spec reaches there (record 75).
 - The Moocalf / Squataur redraw at the corrected area targets is deferred and needs a PixelLab session
   (record 70).
+- **PixelLab is the one leg of this pipeline still done by hand.** It should get a scripted tool like
+  `make_pixel.py`/`make_reference.py` — MCP or a direct API call, `PIXELLAB_API_KEY` added to
+  `doctor.py`'s soft checks — instead of a manual web session, once it's clear which of PixelLab's
+  API/MCP offerings covers the v3 reference/rotation mode this project actually uses.
