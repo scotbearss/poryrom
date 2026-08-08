@@ -1,12 +1,35 @@
 # poryrom
 
-**Make your own Pokémon game by talking about it.**
+> ## "Hey Claude, make me a Pokémon ROM hack."
+> *(or Codex, or Gemini, or whatever AI you've got)*
 
-poryrom turns your AI coding agent into the ROM-hacking expert you always wished you had. You
-describe your game in plain English — *"I want a region based on the Pacific Northwest"*, *"make
-the third gym leader use only fossil Pokémon"* — and it does the rest: writes the code, builds
-the game, tests that your change actually works, and shows you screenshots before you even boot
-it up.
+Do you love playing Pokémon ROM hacks but have little to no technical or artistic know-how to
+make your own? Look no further. This plugin turns your AI coding agent into a genuine
+ROM-hacking expert — years of hard-won knowledge, pulled from the far corners of the ROM-hacking
+community, built right in and sitting at your fingertips. You describe the hack of your dreams,
+in plain English, and it writes the code, builds the game, tests that it actually works, and
+shows you screenshots — all without you touching a wiki, a forum thread, or a line of code.
+
+### Get started
+
+1. **Install the plugin** in an AI coding agent that supports the
+   [Agent Skills](https://agentskills.io) standard — [Claude Code](https://claude.com/claude-code),
+   Codex CLI, Gemini CLI, and others all work.
+2. **Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)** and open it
+   once. (The game compiles inside it — after that, you can forget it's there.)
+3. **Say "check my setup."** Your agent tells you exactly what's left, if anything, and how to
+   fix it. There's a one-time ~1 GB download of the game engine, so budget about 2 GB of free
+   disk space overall.
+4. **Say "start a new game" and describe your idea.** You'll get your own project folder and a
+   playable game file for any GBA emulator ([mGBA](https://mgba.io) is the usual choice).
+
+From there, it's just a conversation:
+
+> "Add a rival who picks the type that beats mine."
+> "Make surfing available before the third gym."
+> "Design a new Pokémon — an electric sheep — and put it on Route 2."
+> "The cave music is too gloomy. Something more mysterious."
+> "Put my game on my handheld."
 
 It builds hacks of **Pokémon Emerald**, using
 [pokeemerald-expansion](https://github.com/rh-hideout/pokeemerald-expansion) — the community
@@ -14,6 +37,10 @@ project that rebuilt Emerald's source code and modernized it with mechanics from
 generations. You don't need to know what any of that means to use this.
 
 *Not affiliated with or endorsed by Nintendo, Game Freak, or The Pokémon Company.*
+
+---
+
+## Want more detail? Here's what's actually going on.
 
 ## How it works
 
@@ -41,27 +68,6 @@ just asking an AI to write game code:
   up in a form that can rebuild the whole project on any computer.
 - **No searching around.** No wikis to trawl, no forum threads from 2011, no tool chains to
   assemble. You ask, in the same chat you already use.
-
-## Getting started
-
-You need three things: an AI coding agent that supports the
-[Agent Skills](https://agentskills.io) standard — [Claude Code](https://claude.com/claude-code),
-Codex CLI, Gemini CLI, and others all work — [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-(the game compiles inside it — install it, start it, forget it), and about 2 GB of free disk space.
-
-1. **Install the plugin** in your agent.
-2. **Say "check my setup."** It will tell you exactly what's missing and give you the one
-   command that fixes each thing. There's a one-time download of the game engine (about 1 GB).
-3. **Say "start a new game" and describe your idea.** You'll get your own project folder and a
-   playable game file to open in any GBA emulator ([mGBA](https://mgba.io) is the usual choice).
-
-From then on, it's a conversation. Some things people say:
-
-> "Add a rival who picks the type that beats mine."
-> "Make surfing available before the third gym."
-> "Design a new Pokémon — an electric sheep — and put it on Route 2."
-> "The cave music is too gloomy. Something more mysterious."
-> "Put my game on my handheld."
 
 ## Good to know
 
