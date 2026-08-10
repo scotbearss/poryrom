@@ -56,12 +56,14 @@ from __future__ import annotations
 
 import argparse
 import filecmp
+import hashlib
 import json
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import hx
@@ -122,6 +124,46 @@ def strip_mtimes(patch: str) -> str:
     is "did the content drift?". `patch` itself ignores these stamps entirely.
     """
     return MTIME_HEADER.sub(r'\1', patch)
+
+
+def digest_file(path: Path) -> str | None:
+    """A file's content, as a hash. None if it cannot be read -- an absence
+    is recorded as an absence."""
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def write_marker(root: Path, hack: str, rels) -> Path:
+    """Record WHAT the replay just proved, file by file.
+
+    Why this exists. The dashboard answers "is my work backed up" from
+    mtimes, and mtimes cannot tell an unexported edit from a tree restored
+    out of that very patch -- both leave files stamped newer than the patch.
+    The exact answer was always available, by re-running the replay, and far
+    too slow to run after every build.
+
+    So the replay writes down what it verified while it still knows. A file
+    whose content still hashes to what was proved is carried, whatever its
+    clock says; a file that hashes to something else is a real edit that is
+    not in the backup. That turns a hedge into an answer, and costs one
+    small file.
+
+    Written only after a green replay, and only on the writing path -- a
+    marker claiming a proof that did not happen would be worse than none."""
+    marker = root / "patches" / f"{hack}.verified.json"
+    fork = root / "hacks" / hack
+    files = {}
+    for rel in sorted(set(rels)):
+        got = digest_file(fork / rel)
+        if got:
+            files[rel] = got
+    marker.write_text(json.dumps(
+        {"version": 1, "at": int(time.time()), "hack": hack,
+         "algorithm": "sha256", "files": files}, indent=1) + "\n",
+        encoding="utf-8")
+    return marker
 
 
 def engine_ignored(engine: Path, rels: list[str]) -> set[str]:
@@ -417,6 +459,15 @@ def main():
         sys.exit(2)
     print(f"==> replay OK: {len(text_files) + len(bin_src)} file(s) byte-identical "
           f"to the live fork")
+
+    # The proof, written down while it is still true. --check deliberately
+    # does not get here: its contract is that it writes nothing, and the
+    # marker belongs to the patch that was just written, not to whichever
+    # one happened to be on disk.
+    if not args.check:
+        marker = write_marker(root, args.hack, list(text_files) + list(bin_src))
+        print(f"  wrote  {marker} "
+              f"({len(json.loads(marker.read_text())['files'])} digests)")
 
 
 if __name__ == "__main__":

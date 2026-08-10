@@ -39,6 +39,32 @@ what does the world say without a text box?
 
 - TBD
 
+## Route order
+
+The critical path in play order, one entry per story beat, read by the companion site's
+story-thread page (see the wiki's `companion-site` page). A beat's places are listed in the
+order the player walks them; a place may appear in more than one beat, and a return visit is
+labelled rather than deduplicated. This is the one place in this doc where a numbered list
+carries `- **Key:** value` fields underneath, the same shape the index's Next actions and the
+slice plan already use.
+
+    1. **The parcel** — Oak's errand, and the first time the world asks for something back.
+       - **Places:** Pallet Town, Route 1, Viridian City, Route 1, Pallet Town
+       - **Gate:** none — this is the opening
+
+    2. **Through the forest** — the first gym, and the first time a type matchup decides a fight.
+       - **Places:** Route 2, Viridian Forest, Pewter City
+       - **Gate:** the parcel delivered
+
+Three fields, only the first required:
+
+- **Places** — a comma-separated list of place names, matched against the map labels the
+  companion site already derives from the tree. Order within the beat is play order.
+- **Gate** — free prose, optional. What the game requires before this beat is reachable. This
+  cannot be derived from scripts, so it's read back as authored, not verified against the tree.
+- The beat's own sentence, after the em dash, is the beat's blurb, and doubles as the place-level
+  note wherever those places are described elsewhere in the site.
+
 ## Open questions (overflow from index)
 
 - none yet

@@ -11,7 +11,7 @@ each limit looks like. Pages link to each other with `[[double-brackets]]`.
 The pages: `walls-and-budgets`, `save-system`, `verification-discipline`, `engine-defects`,
 `maps-and-tilesets`, `battle-engine`, `audio`, `art-pipeline`, `dialogue-voice`, `build-system`,
 `working-lessons`, `design-craft`, `pokemon-data-structure`, `engine-core`, `text-engine`,
-`battle-testing`, `link-and-trade`.
+`battle-testing`, `link-and-trade`, `companion-site`.
 
 Start with `design-craft` if you are deciding what your hack should be, `walls-and-budgets` if
 you are about to change anything, and `verification-discipline` if you are about to claim
