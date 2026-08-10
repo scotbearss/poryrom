@@ -38,6 +38,20 @@ generations. You don't need to know what any of that means to use this.
 
 *Not affiliated with or endorsed by Nintendo, Game Freak, or The Pokémon Company.*
 
+## What's new
+
+**Your game gets its own wiki, for free.** Every hack now generates a companion site alongside
+the ROM — a full PokemonDB-style reference (species, moves, abilities, items, trainers, gyms,
+maps) built straight from your game's own code, plus a dashboard showing exactly how much of the
+game exists, what changed since your last build, and what's still unfinished. It regenerates on
+every build, off the same source the ROM compiled from, so it can never say something your game
+doesn't actually do.
+
+When a game — or a piece of one — is ready to show off, just ask and the same generator produces
+a clean, spoiler-free version of the site: the full reference and the story so far, with every
+in-progress admission and build number stripped out. Nothing publishes on its own; that's always
+your call.
+
 ---
 
 ## Want more detail? Here's what's actually going on.
@@ -82,7 +96,7 @@ just asking an AI to write game code:
 
 The technical story — what's actually in this repo, how verification works, the two detailed
 architecture diagrams — lives in [docs/architecture.md](docs/architecture.md). The knowledge
-base itself is in [docs/](docs/README.md): 17 pages covering everything from *what makes a hack
+base itself is in [docs/](docs/README.md): 18 pages covering everything from *what makes a hack
 good* ([design-craft](docs/wiki/design-craft.md) — start there) to the exact bytes of a Pokémon.
 
 ## Legal
