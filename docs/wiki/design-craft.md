@@ -4,7 +4,9 @@
 makes it build. It distils the craft research (records 35, 36), the teardown of four acclaimed hacks
 (record 50), and — critically — the corrections register (record 52), because records 35 and 36 carry
 known errata and every claim here is stated post-correction. Engine facts live in [[battle-engine]],
-[[maps-and-tilesets]] and their siblings; this page is about choices.
+[[maps-and-tilesets]] and their siblings; this page is about choices. For the granular,
+moment-to-moment version of this — what the opening tour is built from, what an emote bubble
+actually is, what a hack's own shipped text confirms — see [[hack-conventions]].
 
 **Two standing hedges.** First: community-reception claims in records 35 and 36 arrived largely via
 search-snippet extraction because the primary forums block automated fetch — the *patterns* are

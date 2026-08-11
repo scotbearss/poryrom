@@ -51,5 +51,6 @@ History (one line per transition, newest last; full record in log.md):
 - art.md — style, palette strategy, asset ledger
 - audio.md — tracks, SFX, make_song/make_sfx workflow status
 - scope.md — slice plan, cut list, scope math
+- conventions-checklist.md — menu of what players expect; walk once at scoping, then leave alone
 - log.md — append-only history (phases, decisions, sessions)
 - reports/ — dated skill outputs, referenced from log.md
