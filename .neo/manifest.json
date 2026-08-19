@@ -1,0 +1,20 @@
+{
+  "$comment": "Poryrom's Neo app package identity. The harness path is relative to this installed repository, so the public package carries no machine-specific paths or private project data.",
+  "id": "poryrom",
+  "name": "Poryrom",
+  "icon": "icon.svg",
+  "defaultThemeMode": "light",
+  "theme": {
+    "light": { "accent": "#e64980" },
+    "dark": { "accent": "#f783ac" }
+  },
+  "stagePaneIds": ["docs", "changes", "files"],
+  "harness": {
+    "path": ".",
+    "newProjectSkill": "new-game",
+    "checkpointSkill": "librarian",
+    "sessionStartSkill": "session-start",
+    "docsDir": "docs"
+  },
+  "workspaceMarkers": ["harness.json"]
+}
