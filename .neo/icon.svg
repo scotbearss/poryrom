@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <rect x="76" y="76" width="872" height="872" rx="196" fill="#ffffff"/>
+  <rect x="76" y="76" width="872" height="872" rx="196" fill="none" stroke="#eceef2" stroke-width="8"/>
+  <g transform="translate(512,512) scale(1.15) translate(-626,-627)">
+    <!-- beak -->
+    <path d="M366 590 L508 480 L508 590 Z" fill="#2ac4ee"/>
+    <!-- head -->
+    <path d="M516 424 L658 424 L658 572 L516 572 L508 480 Z" fill="#f5327a"/>
+    <!-- neck shadow -->
+    <path d="M516 572 L658 572 L516 692 Z" fill="#124a75"/>
+    <!-- body -->
+    <path d="M540 572 L810 572 L840 602 L840 800 L810 830 L540 830 L512 800 L512 600 Z" fill="#f5327a"/>
+    <!-- tail -->
+    <g fill="#f5327a">
+      <rect x="840" y="614" width="46" height="30"/>
+      <rect x="840" y="672" width="46" height="30"/>
+      <rect x="840" y="730" width="46" height="30"/>
+    </g>
+    <!-- eye -->
+    <rect x="536" y="466" width="42" height="42" fill="#ffffff"/>
+  </g>
+</svg>
